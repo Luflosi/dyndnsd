@@ -112,18 +112,20 @@
         };
 
         packages = {
-          default = dyndnsd;
+          inherit dyndnsd;
+          default = self.packages.${system}.dyndnsd;
         } // lib.optionalAttrs (!pkgs.stdenv.isDarwin) {
           dyndnsd-llvm-coverage = craneLibLLvmTools.cargoLlvmCov (commonArgs // {
             inherit cargoArtifacts;
           });
         };
 
-        apps.default = flake-utils.lib.mkApp {
+        apps.dyndnsd = flake-utils.lib.mkApp {
           drv = dyndnsd;
         };
+        apps.default = self.apps.${system}.dyndnsd;
 
-        devShells.default = craneLib.devShell {
+        devShells.dyndnsd = craneLib.devShell {
           # Inherit inputs from checks.
           checks = self.checks.${system};
 
@@ -135,5 +137,6 @@
             # pkgs.ripgrep
           ];
         };
+        devShells.default = self.devShells.${system}.dyndnsd;
       });
 }
