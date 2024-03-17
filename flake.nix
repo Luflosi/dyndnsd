@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2024 Luflosi <dyndnsd@luflosi.de>
+# SPDX-License-Identifier: AGPL-3.0-only
+
 {
   description = "Build dyndnsd";
 
@@ -109,6 +112,15 @@
             partitions = 1;
             partitionType = "count";
           });
+
+          dyndnsd-reuse = pkgs.runCommand "run-reuse" {
+            src = ./.;
+            nativeBuildInputs = with pkgs; [ reuse ];
+          } ''
+            cd "$src"
+            reuse lint
+            touch "$out"
+          '';
         };
 
         packages = {
