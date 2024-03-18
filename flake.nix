@@ -40,6 +40,7 @@
           craneLibLLvmTools
           cargoArtifacts
           dyndnsd
+          dyndnsd-full
         ;
       in
       {
@@ -97,7 +98,7 @@
         };
 
         packages = {
-          inherit dyndnsd;
+          dyndnsd = dyndnsd-full;
           default = self.packages.${system}.dyndnsd;
         } // lib.optionalAttrs (!pkgs.stdenv.isDarwin) {
           dyndnsd-llvm-coverage = craneLibLLvmTools.cargoLlvmCov (commonArgs // {

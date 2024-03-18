@@ -44,4 +44,13 @@ rec {
   dyndnsd = craneLib.buildPackage (commonArgs // {
     inherit cargoArtifacts;
   });
+
+  dyndnsd-systemd-unit = pkgs.runCommand "dyndnsd-systemd-unit" { } ''
+    install --mode=444 -D '${../systemd/dyndnsd.service}' "$out/etc/systemd/system/dyndnsd.service"
+  '';
+
+  dyndnsd-full = pkgs.symlinkJoin {
+    name = "dyndnsd-full";
+    paths = [ dyndnsd dyndnsd-systemd-unit ];
+  };
 }
