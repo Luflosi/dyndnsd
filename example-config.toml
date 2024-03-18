@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: 2024 Luflosi <dyndnsd@luflosi.de>
+# SPDX-License-Identifier: CC0-1.0
+
+[listen]
+ip = "::1"
+port = 9841
+
+[update_program]
+bin = "nsupdate"
+args = ["-k", "/etc/bind/ddns.key"]
+stdin_per_zone_update = "send\n"
+final_stdin = "quit\n"
+
+[update_program.ipv4]
+stdin = "update delete {domain}. A\nupdate add {domain}. {ttl} IN A {ipv4}\n"
+
+[update_program.ipv6]
+stdin = "update delete {domain}. AAAA\nupdate add {domain}. {ttl} IN AAAA {ipv6}\n"
+
+[users.alice]
+# 123456
+hash = "$argon2id$v=19$m=65536,t=3,p=1$ZFRHDlJOQ3UNQRN7em14R08FIRE$0SqSQRj45ZBz1MfCPq9DVMWt7VSl96m7XtW6maIcUB0"
+
+[users.alice.domains."example.com"]
+ttl = 60
+ipv6prefixlen = 48
+ipv6suffix = "0:0:0:1::5"
+
+[users.bob]
+hash = "$argon2id$v=19$m=65536,t=3,p=1$AllDfFxYDUlcTCRZASwpRiUEYSQ$dEq2jvaPMEe3wVoX6hqXuIDa5AUf9e4Ufy84nqi6tFk"
+
+[users.bob.domains."sub.example.com"]
+ttl = 60
+ipv6prefixlen = 128
+ipv6suffix = "::"
