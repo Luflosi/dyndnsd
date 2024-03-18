@@ -124,5 +124,8 @@
           ];
         };
         devShells.default = self.devShells.${system}.dyndnsd;
-      });
+      }) // {
+        overlays.dyndnsd = import ./nix/overlay.nix (import ./nix/builder.nix) crane fenix;
+        overlays.default = self.overlays.dyndnsd;
+      };
 }
