@@ -29,7 +29,10 @@
   outputs = { self, nixpkgs, crane, fenix, flake-utils, advisory-db, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ self.outputs.overlays.dyndnsd ];
+        };
 
         builder = import ./nix/builder.nix { inherit crane fenix pkgs system; };
         inherit (builder)
@@ -95,6 +98,10 @@
             reuse lint
             touch "$out"
           '';
+
+        # NixOS tests don't run on macOS
+        } // lib.optionalAttrs (!pkgs.stdenv.isDarwin) {
+          dyndnsd-e2e-test = pkgs.testers.runNixOSTest (import ./nix/e2e-test.nix self);
         };
 
         packages = {
