@@ -82,7 +82,7 @@
           # prevent downstream consumers from building our crate by itself.
           dyndnsd-clippy = craneLib.cargoClippy (commonArgs // {
             inherit cargoArtifacts;
-            cargoClippyExtraArgs = "--all-targets -- --deny warnings";
+            cargoClippyExtraArgs = "--all-targets -- --deny warnings -W clippy::pedantic -W clippy::nursery -W clippy::unwrap_used";
           });
 
           dyndnsd-doc = craneLib.cargoDoc (commonArgs // {
