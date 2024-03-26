@@ -88,8 +88,8 @@ self:
           args = [ "-k" "/run/named/ddns.key" ];
           stdin_per_zone_update = "send\n";
           final_stdin = "quit\n";
-          ipv4.stdin = "update delete {domain}. A\nupdate add {domain}. {ttl} IN A {ipv4}\n";
-          ipv6.stdin = "update delete {domain}. AAAA\nupdate add {domain}. {ttl} IN AAAA {ipv6}\n";
+          ipv4.stdin = "update delete {domain}. IN A\nupdate add {domain}. {ttl} IN A {ipv4}\n";
+          ipv6.stdin = "update delete {domain}. IN AAAA\nupdate add {domain}. {ttl} IN AAAA {ipv6}\n";
         };
         users = {
           alice = {

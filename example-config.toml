@@ -12,10 +12,10 @@ stdin_per_zone_update = "send\n"
 final_stdin = "quit\n"
 
 [update_program.ipv4]
-stdin = "update delete {domain}. A\nupdate add {domain}. {ttl} IN A {ipv4}\n"
+stdin = "update delete {domain}. IN A\nupdate add {domain}. {ttl} IN A {ipv4}\n"
 
 [update_program.ipv6]
-stdin = "update delete {domain}. AAAA\nupdate add {domain}. {ttl} IN AAAA {ipv6}\n"
+stdin = "update delete {domain}. IN AAAA\nupdate add {domain}. {ttl} IN AAAA {ipv6}\n"
 
 [users.alice]
 # 123456

@@ -141,7 +141,7 @@ in
             stdin = lib.mkOption {
               type = lib.types.str;
               default = "";
-              example = "update delete {domain}. A\nupdate add {domain}. {ttl} IN A {ipv4}\n";
+              example = "update delete {domain}. IN A\nupdate add {domain}. {ttl} IN A {ipv4}\n";
               description = lib.mdDoc ''
                 String template to send to the stdin of the update program for updating the IPv4 DNS record.
                 The three different variables are replaced with the appropriate values before the string is sent to the update program.
@@ -152,7 +152,7 @@ in
             stdin = lib.mkOption {
               type = lib.types.str;
               default = "";
-              example = "update delete {domain}. AAAA\nupdate add {domain}. {ttl} IN AAAA {ipv6}\n";
+              example = "update delete {domain}. IN AAAA\nupdate add {domain}. {ttl} IN AAAA {ipv6}\n";
               description = lib.mdDoc ''
                 String template to send to the stdin of the update program for updating the IPv6 DNS record.
                 The three different variables are replaced with the appropriate values before the string is sent to the update program.
