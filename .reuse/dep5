@@ -4,5 +4,5 @@ Upstream-Contact: Luflosi <dyndnsd@luflosi.de>
 Source: https://github.com/Luflosi/dyndnsd
 
 Files: *.lock .github/renovate.json
-Copyright: : 2024 Luflosi <dyndnsd@luflosi.de>
+Copyright: 2024 Luflosi <dyndnsd@luflosi.de>
 License: CC0-1.0

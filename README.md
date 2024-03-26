@@ -19,7 +19,7 @@ I use this service only on NixOS but it should just work on other Linux distribu
 - Copy the systemd unit from `systemd/dyndnsd.service` to `/etc/systemd/system/dyndnsd.service` and adapt it to your needs
 - Copy the example configuration file to `/etc/dyndnsd/config.toml`
 - Modify or add users and domains in the configuration file
-- You need to generate a new password hasn for each user
+- You need to generate a new password hash for each user
 - Choose a strong password!
 - Do not reuse the provided insecure password hashes!
 - Enable and start the systemd unit
@@ -28,7 +28,7 @@ I use this service only on NixOS but it should just work on other Linux distribu
 
 If you want to update an IP address in your local network at home, I recommend using your router for this if possible.
 Your router knows when its IP address changes and can send an update immediately.
-This removes the need for prequent periodic updates.
+This removes the need for frequent periodic updates.
 
 ## List of tested routers (please add to this list)
 - FRITZ!Box routers
@@ -39,7 +39,7 @@ This daemon provides the most flexible IPv6 support of any DNS update client I k
 
 This is required if you run the update client on your router but want to update the DNS record of a device behind the router.
 
-In this case your internet provider probably gives you a dynamic IPv6 prefix (often 56 bit).
+In this case your internet provider probably gives you a dynamic IPv6 prefix (often 56 bits).
 Your router then picks some address range such that each host in your local network can pick 64 bit of the address.
 With the above example of 56 bit your router would pick the next 8 bit and each device would choose the remaining 64 bit.
 To make this work with dynamic DNS updates, edit the configuratin and change `ipv6prefixlen` to the prefix length your ISP gives you (e.g. 56).
@@ -47,7 +47,7 @@ Then make sure that the host for which you want to update the DNS record has a p
 For example if your IP address happens to be 2001:db8:0123:4567:8901:2345:6789:0123 right now, the last 128-56=72 bits should never change (67:8901:2345:6789:0123))
 Then add zeroes to the front of the suffix to make it a valid IPv6 address (0::67:8901:2345:6789:0123 in this example) and set it as the `ipv6suffix`.
 
-If your router sends an IPv6 address in the URL but you do not want to update the corresponding AAAA DNS record, set `ipv6prefixlen`.
+If your router sends an IPv6 address in the URL but you do not want to update the corresponding AAAA DNS record, set `ipv6prefixlen` to 0.
 This will cause `dyndnsd` to ignore the update for IPv6.
 
 
