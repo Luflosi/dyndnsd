@@ -18,3 +18,12 @@ serde_derive = "1.0"
 tokio = { version = "1", features = ["full"] }
 toml = "0.8"
 warp = "0.3"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+enum_glob_use = "warn"
+pedantic = "warn"
+nursery = "warn"
+unwrap_used = "warn"
