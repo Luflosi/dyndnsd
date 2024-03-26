@@ -54,7 +54,7 @@ This will cause `dyndnsd` to ignore the update for IPv6.
 ## Notes
 `curl` command illustrating the URL syntax:
 ```sh
-curl -v 'https://[::1]:9841/update?user=bob&pass=123456&ipv4=1.2.3.4&ipv6=1::2'
+curl --verbose 'https://[::1]:9841/update?user=bob&pass=123456&ipv4=1.2.3.4&ipv6=1::2'
 ```
 
 You should use a reverse proxy server like Nginx for TLS so that passwords are encrypted while they are transmitted over the internet.
