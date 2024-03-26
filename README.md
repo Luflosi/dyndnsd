@@ -75,6 +75,8 @@ If you would like to see any of the following TODO items implemented, please fil
 - Improve documentation
 - Add some simpler tests in Rust in addition to the NixOS test
 - Make use of the `ipv6lanprefix` sent by FRITZ!Boxes
+- Use map instead of for loop for config
+- Add reverse DNS records
 
 
 ## License
