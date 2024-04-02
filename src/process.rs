@@ -53,6 +53,7 @@ pub fn update(config: &Config, q: &QueryParameters) -> Result<impl Reply, impl R
 
 	// TODO: stream stdin to the process instead of building a string and then pushing it all at once
 	let mut command = String::new();
+	command.push_str(config.update_program.initial_stdin.as_str());
 	let domains = &user.domains;
 	for (domain, props) in domains {
 		println!("{domain:?} {props:?}");

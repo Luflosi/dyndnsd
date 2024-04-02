@@ -8,6 +8,7 @@ port = 9841
 [update_program]
 bin = "nsupdate"
 args = ["-k", "/etc/bind/ddns.key"]
+initial_stdin = "server ::1\n"
 stdin_per_zone_update = "send\n"
 final_stdin = "quit\n"
 

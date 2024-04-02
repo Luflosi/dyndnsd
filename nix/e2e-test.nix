@@ -11,12 +11,7 @@ self:
     ];
 
     users.groups.ddns = {};
-    systemd.services.dyndnsd.serviceConfig = {
-      SupplementaryGroups = [ "ddns" ];
-
-      IPAddressAllow = [ "localhost" ];
-      IPAddressDeny = "any";
-    };
+    systemd.services.dyndnsd.serviceConfig.SupplementaryGroups = [ "ddns" ];
     systemd.services.bind.preStart = let
       zoneFile = pkgs.writeText "root.zone" ''
         $ORIGIN example.org.

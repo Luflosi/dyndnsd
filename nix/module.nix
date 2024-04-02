@@ -82,6 +82,15 @@ in
   options = {
     services.dyndnsd = {
       enable = lib.mkEnableOption (lib.mdDoc "the DynDNS server");
+      localhost = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = lib.mdDoc ''
+          Assume that dyndnsd and the DNS server run on the same system.
+          In this case, `nsupdate` can contact the server via one of the localhost addresses.
+          This improves security slightly by hardening the dyndnsd systemd service to only allow contacting localhost and deny all other addresses.
+        '';
+      };
 
       settings = {
         listen = {
@@ -119,6 +128,16 @@ in
             example = [ "-k" "/etc/bind/ddns.key" ];
             description = lib.mdDoc ''
               Command line arguments the update program will be called with.
+            '';
+          };
+          initial_stdin = lib.mkOption {
+            type = lib.types.str;
+            default = "";
+            example = lib.literalExpression ''
+              if cfg.localhost then "server ::1\n" else "";
+            '';
+            description = lib.mdDoc ''
+              String to send to the stdin of the update program before sending anything else.
             '';
           };
           stdin_per_zone_update = lib.mkOption {
@@ -214,6 +233,9 @@ in
         EnvironmentFile = cfg.environmentFiles;
         ExecStartPre = lib.mkIf (cfg.environmentFiles != []) [ "'${pkgs.envsubst}/bin/envsubst' -no-unset -i '${settingsFile}' -o '${runtimeConfigPath}'" ];
         ExecStart = [ "" "${pkgs.dyndnsd}/bin/dyndnsd --config '${runtimeConfigPath}'" ];
+      } // lib.optionalAttrs cfg.localhost {
+        IPAddressAllow = [ "localhost" ];
+        IPAddressDeny = "any";
       };
     };
   };
