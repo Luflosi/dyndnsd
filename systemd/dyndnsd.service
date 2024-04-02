@@ -43,7 +43,7 @@ SystemCallArchitectures=native
 SystemCallFilter=@system-service
 SystemCallFilter=~@privileged
 Type=simple
-UMask=77
+UMask=0077
 
 [Install]
 WantedBy=multi-user.target
