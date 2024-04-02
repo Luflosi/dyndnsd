@@ -9,7 +9,6 @@ self:
     imports = [
       self.outputs.nixosModules.dyndnsd
     ];
-    environment.systemPackages = [ pkgs.dig.dnsutils ];
 
     users.groups.ddns = {};
     systemd.services.dyndnsd.serviceConfig = {
@@ -111,6 +110,8 @@ self:
       };
       environmentFiles = [ "/etc/dyndnsd/vars.env" ];
     };
+
+    environment.systemPackages = [ pkgs.dig.dnsutils ]; # Provide the `dig` command in the test script
   };
   testScript = ''
     def query(
