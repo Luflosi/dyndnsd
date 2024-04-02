@@ -19,21 +19,22 @@ self:
     };
     systemd.services.bind.preStart = let
       zoneFile = pkgs.writeText "root.zone" ''
+        $ORIGIN example.org.
         $TTL 3600
         @ IN SOA ns.example.org. admin.example.org. ( 1 3h 1h 1w 1d )
         @ IN NS ns.example.org.
 
-        ns.example.org. IN A    127.0.0.1
-        ns.example.org. IN AAAA ::1
+        ns IN A    127.0.0.1
+        ns IN AAAA ::1
 
         1.0.0.127.in-addr.arpa IN PTR ns.example.org.
         1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa IN PTR ns.example.org.
 
-        example.org. IN A    1.2.3.4
-        example.org. IN AAAA 1:2:3:4:5:6:7:8
+        @ IN A    1.2.3.4
+        @ IN AAAA 1:2:3:4:5:6:7:8
 
-        test.example.org. IN A    4.3.2.1
-        test.example.org. IN AAAA 8:7:6:5:4:3:2:1
+        test IN A    4.3.2.1
+        test IN AAAA 8:7:6:5:4:3:2:1
       '';
     in ''
       mkdir -m 0755 -p /run/named
