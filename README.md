@@ -77,6 +77,7 @@ If you would like to see any of the following TODO items implemented, please fil
 - Make use of the `ipv6lanprefix` sent by FRITZ!Boxes
 - Use map instead of for loop for config
 - Add reverse DNS records
+- Fix the problem where changing the domains in the config file does not immediately update the domains
 
 
 ## License
