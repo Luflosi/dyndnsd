@@ -60,7 +60,8 @@ curl --verbose 'https://[::1]:9841/update?user=bob&pass=123456&ipv4=1.2.3.4&ipv6
 You should use a reverse proxy server like Nginx for TLS so that passwords are encrypted while they are transmitted over the internet.
 
 
-This is one of my first Rust projects so the code will not look very idiomatic. If you have any suggestions for improvements, please do not hesitate to create an issue or even a PR!
+> [!IMPORTANT]
+> This is one of my first Rust projects so the code will not look very idiomatic. If you have any suggestions for improvements, please do not hesitate to create an issue or even a PR! 🖤
 
 
 If you would like to see any of the following TODO items implemented, please file an issue so I know that it is important to someone.
