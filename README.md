@@ -5,7 +5,7 @@
 ## A simple but configurable web server for dynamic DNS updates.
 It's a small webserver that receives DNS update requests and uses an external tool like `nsupdate` to talk to the authoritative DNS server.
 
-The dyndnsd program is written in such a way that it can interface with the `nsupdate` program but I'll be using a different program (not yet written) that will allow me to not hand complete control of the Zone file over to the DNS server so that I can still manually edit the non-dynamic parts of the Zone file.
+The dyndnsd program is written in such a way that it can interface with the `nsupdate` program but I'll be using [zonegen](https://github.com/Luflosi/zonegen) which will allow me to not hand complete control of the Zone file over to the DNS server so that I can still manually edit the non-dynamic parts of the Zone file.
 
 ## Setup on NixOS
 Take a look at `nix/e2e-test.nix` for an example. You need to import the module and overlay provided by this flake.
