@@ -25,7 +25,7 @@ let
         default = {};
         description = lib.mdDoc "Attribute set of domains this user updates after authenticating.";
         example = {
-          "example.com" = {
+          "example.org" = {
             ttl = 60;
             ipv6prefixlen = 48;
             ipv6suffix = "0:0:0:1::5";
@@ -188,7 +188,7 @@ in
             alice = {
               hash = "$argon2id$v=19$m=65536,t=3,p=1$ZFRHDlJOQ3UNQRN7em14R08FIRE$0SqSQRj45ZBz1MfCPq9DVMWt7VSl96m7XtW6maIcUB0";
               domains = {
-                "example.com" = {
+                "example.org" = {
                   ttl = 60;
                   ipv6prefixlen = 48;
                   ipv6suffix = "0:0:0:1::5";

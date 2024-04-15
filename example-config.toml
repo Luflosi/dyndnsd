@@ -22,7 +22,7 @@ stdin = "update delete {domain}. IN AAAA\nupdate add {domain}. {ttl} IN AAAA {ip
 # 123456
 hash = "$argon2id$v=19$m=65536,t=3,p=1$ZFRHDlJOQ3UNQRN7em14R08FIRE$0SqSQRj45ZBz1MfCPq9DVMWt7VSl96m7XtW6maIcUB0"
 
-[users.alice.domains."example.com"]
+[users.alice.domains."example.org"]
 ttl = 60
 ipv6prefixlen = 48
 ipv6suffix = "0:0:0:1::5"
@@ -30,7 +30,7 @@ ipv6suffix = "0:0:0:1::5"
 [users.bob]
 hash = "$argon2id$v=19$m=65536,t=3,p=1$AllDfFxYDUlcTCRZASwpRiUEYSQ$dEq2jvaPMEe3wVoX6hqXuIDa5AUf9e4Ufy84nqi6tFk"
 
-[users.bob.domains."sub.example.com"]
+[users.bob.domains."sub.example.org"]
 ttl = 60
 ipv6prefixlen = 128
 ipv6suffix = "::"
