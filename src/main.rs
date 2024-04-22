@@ -4,7 +4,7 @@
 #[macro_use]
 extern crate error_chain;
 
-use crate::config::read;
+use crate::config::Config;
 use crate::process::{update, QueryParameters};
 use clap::Parser;
 use warp::Filter;
@@ -24,7 +24,7 @@ struct Args {
 async fn main() {
 	let args = Args::parse();
 
-	let config = match read(&args.config) {
+	let config = match Config::read(&args.config) {
 		Ok(v) => v,
 		Err(e) => {
 			eprintln!("ERROR: {e}");

@@ -68,46 +68,49 @@ pub struct User<'a> {
 	pub domains: HashMap<String, Domain>,
 }
 
-pub fn read(filename: &Path) -> Result<Config<'static>> {
-	let contents = fs::read_to_string(filename)
-		.chain_err(|| format!("Cannot read config file `{}`", filename.display()))?;
-	let config_parse_err_msg = || format!("Cannot parse config file `{}`", filename.display());
-	let raw_config: RawConfig = toml::from_str(&contents).chain_err(config_parse_err_msg)?;
-	let users: Result<HashMap<_, _>> = raw_config
-		.users
-		.into_iter()
-		.map(|(username, raw_user)| {
-			let domains = &raw_user.domains;
-			for (domain, props) in domains {
-				let ipv6prefixlen_parse_err_msg = || {
-					format!("Cannot parse ipv6prefixlen for user {username} and domain {domain}")
+impl Config<'_> {
+	pub fn read(filename: &Path) -> Result<Config<'static>> {
+		let contents = fs::read_to_string(filename)
+			.chain_err(|| format!("Cannot read config file `{}`", filename.display()))?;
+		let config_parse_err_msg = || format!("Cannot parse config file `{}`", filename.display());
+		let raw_config: RawConfig = toml::from_str(&contents).chain_err(config_parse_err_msg)?;
+		let users: Result<HashMap<_, _>> = raw_config
+			.users
+			.into_iter()
+			.map(|(username, raw_user)| {
+				let domains = &raw_user.domains;
+				for (domain, props) in domains {
+					let ipv6prefixlen_parse_err_msg =
+						|| {
+							format!("Cannot parse ipv6prefixlen for user {username} and domain {domain}")
+						};
+					if props.ipv6prefixlen > 128 {
+						let prefixlen = props.ipv6prefixlen;
+						return Err(Error::from(format!(
+							"Prefix is longer than 128 bits: {prefixlen}"
+						))
+						.chain_err(ipv6prefixlen_parse_err_msg)
+						.chain_err(config_parse_err_msg));
+					};
+				}
+				// TODO: figure out how to do this without leaking memory. I wish PasswordHash::new() took a String instead of &str
+				let raw_hash = Box::leak(Box::new(raw_user.hash));
+				let user = User {
+					// TODO: get rid of this piece of the code by somehow implementing deserialization for PasswordHash
+					hash: PasswordHash::new(raw_hash)
+						.chain_err(|| format!("Cannot parse password hash of user {username}"))
+						.chain_err(config_parse_err_msg)?,
+					domains: raw_user.domains,
 				};
-				if props.ipv6prefixlen > 128 {
-					let prefixlen = props.ipv6prefixlen;
-					return Err(Error::from(format!(
-						"Prefix is longer than 128 bits: {prefixlen}"
-					))
-					.chain_err(ipv6prefixlen_parse_err_msg)
-					.chain_err(config_parse_err_msg));
-				};
-			}
-			// TODO: figure out how to do this without leaking memory. I wish PasswordHash::new() took a String instead of &str
-			let raw_hash = Box::leak(Box::new(raw_user.hash));
-			let user = User {
-				// TODO: get rid of this piece of the code by somehow implementing deserialization for PasswordHash
-				hash: PasswordHash::new(raw_hash)
-					.chain_err(|| format!("Cannot parse password hash of user {username}"))
-					.chain_err(config_parse_err_msg)?,
-				domains: raw_user.domains,
-			};
-			Ok((username, user))
-		})
-		.collect();
-	let config = Config {
-		listen: SocketAddr::from((raw_config.listen.ip, raw_config.listen.port)),
-		update_program: raw_config.update_program,
-		users: users?,
-	};
+				Ok((username, user))
+			})
+			.collect();
+		let config = Config {
+			listen: SocketAddr::from((raw_config.listen.ip, raw_config.listen.port)),
+			update_program: raw_config.update_program,
+			users: users?,
+		};
 
-	Ok(config)
+		Ok(config)
+	}
 }
