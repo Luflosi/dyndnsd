@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2024 Luflosi <dyndnsd@luflosi.de>
 // SPDX-License-Identifier: AGPL-3.0-only
 
-use crate::config::Config;
+use crate::config::{Config, User};
 use argon2::{password_hash::PasswordVerifier, Argon2};
 use serde_derive::Deserialize;
 use std::io::Write;
@@ -30,27 +30,7 @@ fn splice_ipv6_addrs(prefixlen: u8, prefix: Ipv6Addr, suffix: Ipv6Addr) -> Ipv6A
 	Ipv6Addr::from(masked_prefix | masked_suffix)
 }
 
-pub fn update(config: &Config, q: &QueryParameters) -> Result<impl Reply, impl Reply> {
-	println!("domain: {:?}, user: {:?}, pass: <redacted>, ipv4: {:?}, ipv6: {:?}, dualstack: {:?}, ipv6lanprefix: {:?}", &q.domain, &q.user, &q.ipv4, &q.ipv6, &q.dualstack, &q.ipv6lanprefix);
-
-	let Some(user) = config.users.get(&q.user) else {
-		eprintln!("User {} does not exist.", q.user);
-		return Err(warp::reply::with_status(
-			"Not authorized".to_string(),
-			StatusCode::FORBIDDEN,
-		));
-	};
-
-	if let Err(e) = Argon2::default().verify_password(q.pass.as_bytes(), &user.hash) {
-		eprintln!("Error verifying password: {e}");
-		return Err(warp::reply::with_status(
-			"Not authorized".to_string(),
-			StatusCode::FORBIDDEN,
-		));
-	};
-
-	println!("Authentication successful");
-
+fn build_command_string(config: &Config, user: &User, q: &QueryParameters) -> String {
 	// TODO: stream stdin to the process instead of building a string and then pushing it all at once
 	let mut command = String::new();
 	command.push_str(config.update_program.initial_stdin.as_str());
@@ -94,6 +74,31 @@ pub fn update(config: &Config, q: &QueryParameters) -> Result<impl Reply, impl R
 	}
 	command.push_str(config.update_program.final_stdin.as_str());
 	println!("{command}");
+	command
+}
+
+pub fn update(config: &Config, q: &QueryParameters) -> Result<impl Reply, impl Reply> {
+	println!("domain: {:?}, user: {:?}, pass: <redacted>, ipv4: {:?}, ipv6: {:?}, dualstack: {:?}, ipv6lanprefix: {:?}", &q.domain, &q.user, &q.ipv4, &q.ipv6, &q.dualstack, &q.ipv6lanprefix);
+
+	let Some(user) = config.users.get(&q.user) else {
+		eprintln!("User {} does not exist.", q.user);
+		return Err(warp::reply::with_status(
+			"Not authorized".to_string(),
+			StatusCode::FORBIDDEN,
+		));
+	};
+
+	if let Err(e) = Argon2::default().verify_password(q.pass.as_bytes(), &user.hash) {
+		eprintln!("Error verifying password: {e}");
+		return Err(warp::reply::with_status(
+			"Not authorized".to_string(),
+			StatusCode::FORBIDDEN,
+		));
+	};
+
+	println!("Authentication successful");
+
+	let command = build_command_string(config, user, q);
 
 	let mut child = match Command::new(&config.update_program.bin)
 		.args(&config.update_program.args)
