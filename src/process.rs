@@ -103,7 +103,8 @@ pub fn update(config: &Config, q: &QueryParameters) -> Result<impl Reply, impl R
 	let mut child = match Command::new(&config.update_program.bin)
 		.args(&config.update_program.args)
 		.stdin(Stdio::piped())
-		.stdout(Stdio::null())
+		.stdout(Stdio::piped())
+		.stderr(Stdio::piped())
 		.spawn()
 	{
 		Ok(v) => v,
@@ -136,8 +137,15 @@ pub fn update(config: &Config, q: &QueryParameters) -> Result<impl Reply, impl R
 
 	let status = output.status;
 	if !status.success() {
-		println!("{output:?}");
-		println!("failure: {status}");
+		println!("The update program failed with {status}");
+		let stdout = String::from_utf8_lossy(&output.stdout);
+		if !stdout.is_empty() {
+			println!("and stdout: `{stdout}`");
+		}
+		let stderr = String::from_utf8_lossy(&output.stderr);
+		if !stderr.is_empty() {
+			println!("and stderr: `{stderr}`");
+		}
 		return Err(warp::reply::with_status(
 			"ERROR".to_string(),
 			StatusCode::INTERNAL_SERVER_ERROR,
