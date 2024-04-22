@@ -11,7 +11,7 @@ use serde_derive::Deserialize;
 use std::collections::HashMap;
 use std::fs;
 use std::net::{IpAddr, Ipv6Addr, SocketAddr};
-use std::path::PathBuf;
+use std::path::Path;
 
 #[derive(Debug, Deserialize)]
 struct RawConfig {
@@ -68,7 +68,7 @@ pub struct User<'a> {
 	pub domains: HashMap<String, Domain>,
 }
 
-pub fn read(filename: &PathBuf) -> Result<Config<'static>> {
+pub fn read(filename: &Path) -> Result<Config<'static>> {
 	let contents = fs::read_to_string(filename)
 		.chain_err(|| format!("Cannot read config file `{}`", filename.display()))?;
 	let config_parse_err_msg = || format!("Cannot parse config file `{}`", filename.display());
