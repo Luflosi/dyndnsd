@@ -1,16 +1,18 @@
 // SPDX-FileCopyrightText: 2024 Luflosi <dyndnsd@luflosi.de>
 // SPDX-License-Identifier: AGPL-3.0-only
 
+mod config;
+mod logging;
+mod process;
+
 #[macro_use]
 extern crate error_chain;
 
 use crate::config::Config;
 use crate::process::{update, QueryParameters};
 use clap::Parser;
+use log::{error, info};
 use warp::Filter;
-
-mod config;
-mod process;
 
 #[derive(Parser, Debug)]
 #[command(version)]
@@ -22,16 +24,18 @@ struct Args {
 
 #[tokio::main]
 async fn main() {
+	logging::setup();
+
 	let args = Args::parse();
 
 	let config = match Config::read(&args.config) {
 		Ok(v) => v,
 		Err(e) => {
-			eprintln!("ERROR: {e}");
+			error!("ERROR: {e}");
 
 			/////// look at the chain of errors... ///////
 			for e in e.iter().skip(1) {
-				eprintln!("caused by: {e}");
+				error!("caused by: {e}");
 			}
 
 			std::process::exit(1);
@@ -45,6 +49,6 @@ async fn main() {
 		.and(warp::query::<QueryParameters>())
 		.map(move |q: QueryParameters| update(&config, &q));
 
-	println!("Listening on {listen}");
+	info!("Listening on {listen}");
 	warp::serve(update).run(listen).await;
 }

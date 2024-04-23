@@ -3,6 +3,7 @@
 
 use crate::config::{Config, User};
 use argon2::{password_hash::PasswordVerifier, Argon2};
+use log::{debug, error, info, trace, warn};
 use serde_derive::Deserialize;
 use std::io::Write;
 use std::net::{Ipv4Addr, Ipv6Addr};
@@ -11,7 +12,7 @@ use warp::{http::StatusCode, Reply};
 
 #[derive(Deserialize)]
 pub struct QueryParameters {
-	domain: Option<String>,
+	domain: Option<String>, // Ignored, we use the username to determine the list of domains to be updated
 	user: String,
 	pass: String,
 	ipv4: Option<Ipv4Addr>,
@@ -36,7 +37,7 @@ fn build_command_string(config: &Config, user: &User, q: &QueryParameters) -> St
 	command.push_str(config.update_program.initial_stdin.as_str());
 	let domains = &user.domains;
 	for (domain, props) in domains {
-		println!("{domain:?} {props:?}");
+		trace!("Domain: {domain:?} {props:?}");
 		let ttl = &props.ttl.to_string();
 		if let Some(ipv4) = q.ipv4 {
 			let ipv4 = &ipv4.to_string();
@@ -53,7 +54,7 @@ fn build_command_string(config: &Config, user: &User, q: &QueryParameters) -> St
 		}
 		if let Some(prefix) = q.ipv6 {
 			if props.ipv6prefixlen == 0 {
-				println!("IPv6 prefix length for domain {domain} is zero, ignoring update to IPv6 address");
+				warn!("IPv6 prefix length for domain {domain} is zero, ignoring update to IPv6 address");
 			} else {
 				let assembled_addr =
 					splice_ipv6_addrs(props.ipv6prefixlen, prefix, props.ipv6suffix);
@@ -73,12 +74,13 @@ fn build_command_string(config: &Config, user: &User, q: &QueryParameters) -> St
 		command.push_str(config.update_program.stdin_per_zone_update.as_str());
 	}
 	command.push_str(config.update_program.final_stdin.as_str());
-	println!("{command}");
+	debug!("Commands for update program:\n{command}");
 	command
 }
 
 pub fn update(config: &Config, q: &QueryParameters) -> Result<impl Reply, impl Reply> {
-	println!("domain: {:?}, user: {:?}, pass: <redacted>, ipv4: {:?}, ipv6: {:?}, dualstack: {:?}, ipv6lanprefix: {:?}", &q.domain, &q.user, &q.ipv4, &q.ipv6, &q.dualstack, &q.ipv6lanprefix);
+	info!("Incoming request from user `{}`", &q.user);
+	debug!("domain: {:?}, user: {:?}, pass: <redacted>, ipv4: {:?}, ipv6: {:?}, dualstack: {:?}, ipv6lanprefix: {:?}", &q.domain, &q.user, &q.ipv4, &q.ipv6, &q.dualstack, &q.ipv6lanprefix);
 
 	let Some(user) = config.users.get(&q.user) else {
 		eprintln!("User {} does not exist.", q.user);
@@ -96,7 +98,7 @@ pub fn update(config: &Config, q: &QueryParameters) -> Result<impl Reply, impl R
 		));
 	};
 
-	println!("Authentication successful");
+	info!("Authentication successful");
 
 	let command = build_command_string(config, user, q);
 
@@ -137,20 +139,20 @@ pub fn update(config: &Config, q: &QueryParameters) -> Result<impl Reply, impl R
 
 	let status = output.status;
 	if !status.success() {
-		println!("The update program failed with {status}");
+		error!("The update program failed with {status}");
 		let stdout = String::from_utf8_lossy(&output.stdout);
 		if !stdout.is_empty() {
-			println!("and stdout: `{stdout}`");
+			error!("and stdout: `{stdout}`");
 		}
 		let stderr = String::from_utf8_lossy(&output.stderr);
 		if !stderr.is_empty() {
-			println!("and stderr: `{stderr}`");
+			error!("and stderr: `{stderr}`");
 		}
 		return Err(warp::reply::with_status(
 			"ERROR".to_string(),
 			StatusCode::INTERNAL_SERVER_ERROR,
 		));
 	}
-	println!("Success");
+	info!("Successfully processed update request");
 	Ok(warp::reply::with_status("ok".to_string(), StatusCode::OK))
 }

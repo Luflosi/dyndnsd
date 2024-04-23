@@ -45,5 +45,10 @@ SystemCallFilter=~@privileged
 Type=simple
 UMask=0077
 
+Environment="RUST_LOG_STYLE=SYSTEMD"
+
+# Uncomment for maximum verbosity
+#Environment="RUST_LOG=dyndnsd=trace"
+
 [Install]
 WantedBy=multi-user.target

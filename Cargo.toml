@@ -12,7 +12,9 @@ license = "AGPL-3.0-only"
 [dependencies]
 argon2 = { version = "0.5", features = ["std"] }
 clap = { version = "4.5", features = ["derive"] }
+env_logger = "0.11"
 error-chain = "0.12"
+log = "0.4"
 serde = "1.0"
 serde_derive = "1.0"
 tokio = { version = "1", features = ["full"] }
@@ -24,6 +26,8 @@ unsafe_code = "forbid"
 
 [lints.clippy]
 enum_glob_use = "warn"
-pedantic = "warn"
 nursery = "warn"
+pedantic = "warn"
+print_stdout = "warn"
 unwrap_used = "warn"
+use_debug = "warn"

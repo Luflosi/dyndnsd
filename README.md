@@ -72,7 +72,6 @@ If you would like to see any of the following TODO items implemented, please fil
 - Test on platforms other than `x86_64-linux`
 - Use systemd socket activation for lower resource usage
 - Support HTTP basic auth
-- Implement proper logging with different log levels to reduce log spam
 - Improve documentation
 - Add some simpler tests in Rust in addition to the NixOS test
 - Make use of the `ipv6lanprefix` sent by FRITZ!Boxes
