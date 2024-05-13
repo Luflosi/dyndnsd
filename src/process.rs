@@ -83,7 +83,7 @@ pub fn update(config: &Config, q: &QueryParameters) -> Result<impl Reply, impl R
 	debug!("domain: {:?}, user: {:?}, pass: <redacted>, ipv4: {:?}, ipv6: {:?}, dualstack: {:?}, ipv6lanprefix: {:?}", &q.domain, &q.user, &q.ipv4, &q.ipv6, &q.dualstack, &q.ipv6lanprefix);
 
 	let Some(user) = config.users.get(&q.user) else {
-		eprintln!("User {} does not exist.", q.user);
+		warn!("User {} does not exist.", q.user);
 		return Err(warp::reply::with_status(
 			"Not authorized".to_string(),
 			StatusCode::FORBIDDEN,
@@ -91,7 +91,7 @@ pub fn update(config: &Config, q: &QueryParameters) -> Result<impl Reply, impl R
 	};
 
 	if let Err(e) = Argon2::default().verify_password(q.pass.as_bytes(), &user.hash) {
-		eprintln!("Error verifying password: {e}");
+		warn!("Error verifying password: {e}");
 		return Err(warp::reply::with_status(
 			"Not authorized".to_string(),
 			StatusCode::FORBIDDEN,
@@ -111,15 +111,17 @@ pub fn update(config: &Config, q: &QueryParameters) -> Result<impl Reply, impl R
 	{
 		Ok(v) => v,
 		Err(e) => {
+			error!("Error spawning child process: {e}");
 			return Err(warp::reply::with_status(
 				e.to_string(),
 				StatusCode::INTERNAL_SERVER_ERROR,
-			))
+			));
 		}
 	};
 
 	if let Some(mut stdin) = child.stdin.take() {
 		if let Err(e) = stdin.write_all(command.as_bytes()) {
+			error!("Error writing command to child process: {e}");
 			return Err(warp::reply::with_status(
 				e.to_string(),
 				StatusCode::INTERNAL_SERVER_ERROR,
@@ -130,10 +132,11 @@ pub fn update(config: &Config, q: &QueryParameters) -> Result<impl Reply, impl R
 	let output = match child.wait_with_output() {
 		Ok(v) => v,
 		Err(e) => {
+			error!("Error waiting for the output of the child process: {e}");
 			return Err(warp::reply::with_status(
 				e.to_string(),
 				StatusCode::INTERNAL_SERVER_ERROR,
-			))
+			));
 		}
 	};
 
