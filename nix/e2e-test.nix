@@ -36,7 +36,7 @@ self:
       if ! [ -f "/run/named/ddns.key" ]; then
         ${config.services.bind.package.out}/sbin/rndc-confgen -c /run/named/ddns.key -u named -a -k ddns 2>/dev/null
         chgrp ddns /run/named/ddns.key
-        chmod 640 /run/named/ddns.key
+        chmod 440 /run/named/ddns.key
       fi
       mkdir -p '/var/lib/bind/zones/example.org/'
       chown -R named '/var/lib/bind/zones/example.org/'
