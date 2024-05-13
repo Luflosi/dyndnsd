@@ -38,7 +38,7 @@ let
   domainOpts = { lib, name, ... }: {
     options = {
       ttl = lib.mkOption {
-        type = lib.types.ints.positive;
+        type = lib.types.ints.u32;
         default = 60;
         description = lib.mdDoc ''
           The TTL of the DNS record.
