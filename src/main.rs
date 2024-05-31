@@ -5,13 +5,11 @@ mod config;
 mod logging;
 mod process;
 
-#[macro_use]
-extern crate error_chain;
-
 use crate::config::Config;
 use crate::process::{update, QueryParameters};
 use clap::Parser;
-use log::{error, info};
+use color_eyre::eyre::Result;
+use log::info;
 use warp::Filter;
 
 #[derive(Parser, Debug)]
@@ -23,24 +21,14 @@ struct Args {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
+	color_eyre::install()?;
+
 	logging::setup();
 
 	let args = Args::parse();
 
-	let config = match Config::read(&args.config) {
-		Ok(v) => v,
-		Err(e) => {
-			error!("ERROR: {e}");
-
-			/////// look at the chain of errors... ///////
-			for e in e.iter().skip(1) {
-				error!("caused by: {e}");
-			}
-
-			std::process::exit(1);
-		}
-	};
+	let config = Config::read(&args.config)?;
 
 	let listen = config.listen;
 	let update = warp::get()
@@ -51,4 +39,6 @@ async fn main() {
 
 	info!("Listening on {listen}");
 	warp::serve(update).run(listen).await;
+
+	Ok(())
 }
