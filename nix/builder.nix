@@ -9,7 +9,7 @@
 rec {
   inherit (pkgs) lib;
 
-  craneLib = crane.lib.${system};
+  craneLib = crane.mkLib pkgs;
   src = craneLib.cleanCargoSource (craneLib.path ../.);
 
   # Common arguments can be set here to avoid repeating them later
