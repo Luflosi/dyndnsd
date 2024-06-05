@@ -13,7 +13,7 @@ let
       hash = lib.mkOption {
         type = lib.types.str;
         example = "$argon2id$v=19$m=65536,t=3,p=1$ZFRHDlJOQ3UNQRN7em14R08FIRE$0SqSQRj45ZBz1MfCPq9DVMWt7VSl96m7XtW6maIcUB0";
-        description = lib.mdDoc ''
+        description = ''
           The encoded Argon2 password hash for the user.
           To generate the password hash with a strong salt and without leaving the password in the shell history, execute
           `nix run nixpkgs#libargon2 -- "$(LC_ALL=C tr -dc '[:print:][:cntrl:]' </dev/urandom | head -c 20)" -id -m 16`
@@ -23,7 +23,7 @@ let
       domains = lib.mkOption {
         type = lib.types.attrsOf (lib.types.submodule domainOpts);
         default = {};
-        description = lib.mdDoc "Attribute set of domains this user updates after authenticating.";
+        description = "Attribute set of domains this user updates after authenticating.";
         example = {
           "example.org" = {
             ttl = 60;
@@ -40,7 +40,7 @@ let
       ttl = lib.mkOption {
         type = lib.types.ints.u32;
         default = 60;
-        description = lib.mdDoc ''
+        description = ''
           The TTL of the DNS record.
           See `update_program.ipv4.stdin` and `update_program.ipv6.stdin`.
         '';
@@ -49,7 +49,7 @@ let
         type = lib.types.ints.between 0 128;
         default = 128;
         example = 56;
-        description = lib.mdDoc ''
+        description = ''
           Change this option if you want to update the IPv6 address of a host other than the one which is making the request.
           Use this for example if you run the DNS update client on your router but want to update the IP address of a separate server in your lokal network.
           In this example, your router gets assigned a dynamic prefix from your ISP periodically but the part of the IPv6 address which is under your control (the host part) always stays the same.
@@ -64,7 +64,7 @@ let
         type = lib.types.str;
         default = "::";
         example = "0:0:0:1::5";
-        description = lib.mdDoc ''
+        description = ''
           Change this option if you want to update the IPv6 address of a host other than the one which is making the request.
           Use this for example if you run the DNS update client on your router but want to update the IP address of a separate server in your lokal network.
           In this example, your router gets assigned a dynamic prefix from your ISP periodically but the part of the IPv6 address which is under your control (the host part) always stays the same.
@@ -81,11 +81,11 @@ in
 {
   options = {
     services.dyndnsd = {
-      enable = lib.mkEnableOption (lib.mdDoc "the DynDNS server");
+      enable = lib.mkEnableOption "the DynDNS server";
       localhost = lib.mkOption {
         type = lib.types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = ''
           Assume that dyndnsd and the DNS server run on the same system.
           In this case, `nsupdate` can contact the server via one of the localhost addresses.
           This improves security slightly by hardening the dyndnsd systemd service to only allow contacting localhost and deny all other addresses.
@@ -98,7 +98,7 @@ in
             type = lib.types.str;
             default = "::1";
             example = "::";
-            description = lib.mdDoc ''
+            description = ''
               Only listen to incoming requests on a specific IP address.
               The default is to listen on IPv6 localhost.
               The special address :: will listen on all IPv4 and IPv6 addresses.
@@ -107,7 +107,7 @@ in
           port = lib.mkOption {
             type = lib.types.port;
             default = 9841;
-            description = lib.mdDoc ''
+            description = ''
               The port on which to listen.
             '';
           };
@@ -118,7 +118,7 @@ in
             type = lib.types.path;
             default = "${pkgs.coreutils}/bin/false";
             example = lib.literalExpression ''"''${pkgs.dig.dnsutils}/bin/nsupdate"'';
-            description = lib.mdDoc ''
+            description = ''
               Path to a program which will be used to forward the updated (dynamic) IP addresses to the actual DNS server.
             '';
           };
@@ -126,7 +126,7 @@ in
             type = lib.types.listOf lib.types.str;
             default = [];
             example = [ "-k" "/etc/bind/ddns.key" ];
-            description = lib.mdDoc ''
+            description = ''
               Command line arguments the update program will be called with.
             '';
           };
@@ -136,7 +136,7 @@ in
             example = lib.literalExpression ''
               if cfg.localhost then "server ::1\n" else null;
             '';
-            description = lib.mdDoc ''
+            description = ''
               String to send to the stdin of the update program before sending anything else.
             '';
           };
@@ -144,7 +144,7 @@ in
             type = lib.types.str;
             default = "";
             example = "send\n";
-            description = lib.mdDoc ''
+            description = ''
               String to send to the stdin of the update program after each zone (domain) was updated.
             '';
           };
@@ -152,7 +152,7 @@ in
             type = lib.types.str;
             default = "";
             example = "quit\n";
-            description = lib.mdDoc ''
+            description = ''
               String to send to the stdin of the update program when we're done.
             '';
           };
@@ -161,7 +161,7 @@ in
               type = lib.types.str;
               default = "";
               example = "update delete {domain}. IN A\nupdate add {domain}. {ttl} IN A {ipv4}\n";
-              description = lib.mdDoc ''
+              description = ''
                 String template to send to the stdin of the update program for updating the IPv4 DNS record.
                 The three different variables are replaced with the appropriate values before the string is sent to the update program.
               '';
@@ -172,7 +172,7 @@ in
               type = lib.types.str;
               default = "";
               example = "update delete {domain}. IN AAAA\nupdate add {domain}. {ttl} IN AAAA {ipv6}\n";
-              description = lib.mdDoc ''
+              description = ''
                 String template to send to the stdin of the update program for updating the IPv6 DNS record.
                 The three different variables are replaced with the appropriate values before the string is sent to the update program.
               '';
@@ -183,7 +183,7 @@ in
         users = lib.mkOption {
           type = lib.types.attrsOf (lib.types.submodule userOpts);
           default = {};
-          description = lib.mdDoc "Attribute set of users.";
+          description = "Attribute set of users.";
           example = {
             alice = {
               hash = "$argon2id$v=19$m=65536,t=3,p=1$ZFRHDlJOQ3UNQRN7em14R08FIRE$0SqSQRj45ZBz1MfCPq9DVMWt7VSl96m7XtW6maIcUB0";
@@ -203,7 +203,7 @@ in
         default = [];
         type = lib.types.listOf lib.types.path;
         example = [ "/run/secrets/dyndnsd.env" ];
-        description = lib.mdDoc ''
+        description = ''
           Files to load as environment file. Environment variables from this file
           will be substituted into the static configuration file using [envsubst](https://github.com/a8m/envsubst).
           If you change this option, make sure to either not have any password hashes in the configuration
