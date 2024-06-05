@@ -92,6 +92,12 @@ in
         Look at `nix/e2e-test.nix` for an example of how to do that.
       '';
 
+      useZonegen = lib.mkEnableOption ''
+        the recommended default configuration for using zonegen.
+        This sets all of the `services.dyndnsd.settings.update_program` options.
+        It also creates the `zonegen` group and allows zonegen to access `/var/lib/bind/zones/dyn/`.
+      '';
+
       localhost = lib.mkOption {
         type = lib.types.bool;
         default = true;
@@ -250,7 +256,15 @@ in
           IPAddressDeny = "any";
         };
       };
+
+      assertions = lib.singleton {
+        assertion = !(cfg.useNsupdateProgram && cfg.useZonegen);
+        message = ''
+          Only one of services.dyndnsd.useNsupdateProgram and services.dyndnsd.useZonegen can be set at once.
+        '';
+      };
     })
+
     (lib.mkIf (cfg.enable && cfg.useNsupdateProgram) {
       users.groups.ddns = {};
       systemd.services.dyndnsd.serviceConfig.SupplementaryGroups = [ "ddns" ];
@@ -276,6 +290,28 @@ in
         final_stdin = lib.mkDefault "quit\n";
         ipv4.stdin = lib.mkDefault "update delete {domain}. IN A\nupdate add {domain}. {ttl} IN A {ipv4}\n";
         ipv6.stdin = lib.mkDefault "update delete {domain}. IN AAAA\nupdate add {domain}. {ttl} IN AAAA {ipv6}\n";
+      };
+    })
+
+    (lib.mkIf (cfg.enable && cfg.useZonegen) {
+      users.groups.zonegen = {};
+
+      systemd.services.dyndnsd.serviceConfig = {
+        SupplementaryGroups = [ "zonegen" ];
+        ReadWritePaths = [ "/var/lib/bind/zones/dyn/" ];
+
+        # The tempfile-fast rust crate tries to keep the old permissions, so we need to allow this class of system calls
+        SystemCallFilter = [ "@chown" ];
+        UMask = "0022"; # Allow all processes (including BIND) to read the zone files (and database)
+      };
+
+      services.dyndnsd.settings.update_program = {
+        bin = "${pkgs.zonegen}/bin/zonegen";
+        args = [ "--dir" "/var/lib/bind/zones/dyn/" ];
+        stdin_per_zone_update = "send\n";
+        final_stdin = "quit\n";
+        ipv4.stdin = "update add {domain}. {ttl} IN A {ipv4}\n";
+        ipv6.stdin = "update add {domain}. {ttl} IN AAAA {ipv6}\n";
       };
     })
   ];
