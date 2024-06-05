@@ -82,6 +82,16 @@ in
   options = {
     services.dyndnsd = {
       enable = lib.mkEnableOption "the DynDNS server";
+
+      useNsupdateProgram = lib.mkEnableOption ''
+        the recommended default configuration for using nsupdate with BIND.
+        This sets all of the `services.dyndnsd.settings.update_program` options.
+        It also creates a key when the system starts and tells BIND where to find it.
+        The key is readable by the `ddns` group, which is also created. `dyndnsd` is allowed access to the key.
+        You still need to manually set an `update-policy` with which BIND allows updates to specific domain names.
+        Look at `nix/e2e-test.nix` for an example of how to do that.
+      '';
+
       localhost = lib.mkOption {
         type = lib.types.bool;
         default = true;
@@ -214,30 +224,59 @@ in
   };
 
 
-  config = lib.mkIf cfg.enable {
-    systemd.packages = [ pkgs.dyndnsd ];
+  config = lib.mkMerge [
+    (lib.mkIf cfg.enable {
+      systemd.packages = [ pkgs.dyndnsd ];
 
-    systemd.services.dyndnsd = {
-      description = "Service that updates a dynamic DNS record";
-      after = [ "network.target" ];
-      wantedBy = [ "multi-user.target" ];
-      startLimitBurst = 1;
+      systemd.services.dyndnsd = {
+        description = "Service that updates a dynamic DNS record";
+        after = [ "network.target" ];
+        wantedBy = [ "multi-user.target" ];
+        startLimitBurst = 1;
 
-      serviceConfig = let
-        settingsNoNulls = lib.filterAttrsRecursive (_: v: v != null) cfg.settings;
-        settingsFile = settingsFormat.generate "dyndnsd.toml" settingsNoNulls;
-        runtimeConfigPath = if cfg.environmentFiles != []
-          then "/run/${RuntimeDirectory}/dyndnsd.toml"
-          else settingsFile;
-      in {
-        inherit RuntimeDirectory;
-        EnvironmentFile = cfg.environmentFiles;
-        ExecStartPre = lib.mkIf (cfg.environmentFiles != []) [ "'${pkgs.envsubst}/bin/envsubst' -no-unset -i '${settingsFile}' -o '${runtimeConfigPath}'" ];
-        ExecStart = [ "" "${pkgs.dyndnsd}/bin/dyndnsd --config '${runtimeConfigPath}'" ];
-      } // lib.optionalAttrs cfg.localhost {
-        IPAddressAllow = [ "localhost" ];
-        IPAddressDeny = "any";
+        serviceConfig = let
+          settingsNoNulls = lib.filterAttrsRecursive (_: v: v != null) cfg.settings;
+          settingsFile = settingsFormat.generate "dyndnsd.toml" settingsNoNulls;
+          runtimeConfigPath = if cfg.environmentFiles != []
+            then "/run/${RuntimeDirectory}/dyndnsd.toml"
+            else settingsFile;
+        in {
+          inherit RuntimeDirectory;
+          EnvironmentFile = cfg.environmentFiles;
+          ExecStartPre = lib.mkIf (cfg.environmentFiles != []) [ "'${pkgs.envsubst}/bin/envsubst' -no-unset -i '${settingsFile}' -o '${runtimeConfigPath}'" ];
+          ExecStart = [ "" "${pkgs.dyndnsd}/bin/dyndnsd --config '${runtimeConfigPath}'" ];
+        } // lib.optionalAttrs cfg.localhost {
+          IPAddressAllow = [ "localhost" ];
+          IPAddressDeny = "any";
+        };
       };
-    };
-  };
+    })
+    (lib.mkIf (cfg.enable && cfg.useNsupdateProgram) {
+      users.groups.ddns = {};
+      systemd.services.dyndnsd.serviceConfig.SupplementaryGroups = [ "ddns" ];
+
+      systemd.services.bind.preStart = ''
+        mkdir -m 0755 -p /run/named
+        if ! [ -f "/run/named/ddns.key" ]; then
+          (umask 227 && ${config.services.bind.package.out}/sbin/rndc-confgen -c /run/named/ddns.key -u named -a -k ddns 2>/dev/null)
+          chgrp ddns /run/named/ddns.key
+          chmod 440 /run/named/ddns.key
+        fi
+      '';
+
+      services.bind.extraConfig = ''
+        include "/run/named/ddns.key";
+      '';
+
+      services.dyndnsd.settings.update_program = {
+        bin = lib.mkDefault "${pkgs.dig.dnsutils}/bin/nsupdate";
+        args = lib.mkDefault [ "-k" "/run/named/ddns.key" ];
+        initial_stdin = lib.mkDefault (if cfg.localhost then "server ::1\n" else null);
+        stdin_per_zone_update = lib.mkDefault "send\n";
+        final_stdin = lib.mkDefault "quit\n";
+        ipv4.stdin = lib.mkDefault "update delete {domain}. IN A\nupdate add {domain}. {ttl} IN A {ipv4}\n";
+        ipv6.stdin = lib.mkDefault "update delete {domain}. IN AAAA\nupdate add {domain}. {ttl} IN AAAA {ipv6}\n";
+      };
+    })
+  ];
 }

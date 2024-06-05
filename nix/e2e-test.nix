@@ -10,8 +10,6 @@ self:
       self.outputs.nixosModules.dyndnsd
     ];
 
-    users.groups.ddns = {};
-    systemd.services.dyndnsd.serviceConfig.SupplementaryGroups = [ "ddns" ];
     systemd.services.bind.preStart = let
       zoneFile = pkgs.writeText "root.zone" ''
         $ORIGIN example.org.
@@ -32,12 +30,6 @@ self:
         test IN AAAA 8:7:6:5:4:3:2:1
       '';
     in ''
-      mkdir -m 0755 -p /run/named
-      if ! [ -f "/run/named/ddns.key" ]; then
-        ${config.services.bind.package.out}/sbin/rndc-confgen -c /run/named/ddns.key -u named -a -k ddns 2>/dev/null
-        chgrp ddns /run/named/ddns.key
-        chmod 440 /run/named/ddns.key
-      fi
       mkdir -p '/var/lib/bind/zones/example.org/'
       chown -R named '/var/lib/bind/zones/example.org/'
       cp '${zoneFile}' '/var/lib/bind/zones/example.org/example.org.zone'
@@ -48,9 +40,6 @@ self:
       enable = true;
       forward = "only";
       forwarders = [];
-      extraConfig = ''
-        include "/run/named/ddns.key";
-      '';
       extraOptions = ''
         empty-zones-enable no;
       '';
@@ -77,15 +66,8 @@ self:
     };
     services.dyndnsd = {
       enable = true;
+      useNsupdateProgram = true;
       settings = {
-        update_program = {
-          bin = "${pkgs.dig.dnsutils}/bin/nsupdate";
-          args = [ "-k" "/run/named/ddns.key" ];
-          stdin_per_zone_update = "send\n";
-          final_stdin = "quit\n";
-          ipv4.stdin = "update delete {domain}. IN A\nupdate add {domain}. {ttl} IN A {ipv4}\n";
-          ipv6.stdin = "update delete {domain}. IN AAAA\nupdate add {domain}. {ttl} IN AAAA {ipv6}\n";
-        };
         users = {
           alice = {
             hash = "$HASH";
