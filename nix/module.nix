@@ -131,10 +131,10 @@ in
             '';
           };
           initial_stdin = lib.mkOption {
-            type = lib.types.str;
-            default = "";
+            type = lib.types.nullOr lib.types.str;
+            default = null;
             example = lib.literalExpression ''
-              if cfg.localhost then "server ::1\n" else "";
+              if cfg.localhost then "server ::1\n" else null;
             '';
             description = lib.mdDoc ''
               String to send to the stdin of the update program before sending anything else.
@@ -224,7 +224,8 @@ in
       startLimitBurst = 1;
 
       serviceConfig = let
-        settingsFile = settingsFormat.generate "dyndnsd.toml" cfg.settings;
+        settingsNoNulls = lib.filterAttrsRecursive (_: v: v != null) cfg.settings;
+        settingsFile = settingsFormat.generate "dyndnsd.toml" settingsNoNulls;
         runtimeConfigPath = if cfg.environmentFiles != []
           then "/run/${RuntimeDirectory}/dyndnsd.toml"
           else settingsFile;

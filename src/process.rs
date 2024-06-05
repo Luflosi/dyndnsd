@@ -34,7 +34,9 @@ fn splice_ipv6_addrs(prefixlen: u8, prefix: Ipv6Addr, suffix: Ipv6Addr) -> Ipv6A
 fn build_command_string(config: &Config, user: &User, q: &QueryParameters) -> String {
 	// TODO: stream stdin to the process instead of building a string and then pushing it all at once
 	let mut command = String::new();
-	command.push_str(config.update_program.initial_stdin.as_str());
+	if let Some(initial_stdin) = &config.update_program.initial_stdin {
+		command.push_str(initial_stdin);
+	}
 	let domains = &user.domains;
 	for (domain, props) in domains {
 		trace!("Domain: {domain:?} {props:?}");

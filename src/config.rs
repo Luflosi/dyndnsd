@@ -39,7 +39,7 @@ pub struct Config<'a> {
 pub struct UpdateProgram {
 	pub bin: String,
 	pub args: Vec<String>,
-	pub initial_stdin: String,
+	pub initial_stdin: Option<String>,
 	pub stdin_per_zone_update: String,
 	pub final_stdin: String,
 	pub ipv4: SpecialUpdateProgram,
