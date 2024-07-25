@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2024 Luflosi <dyndnsd@luflosi.de>
+# SPDX-License-Identifier: CC0-1.0
+
+version = 1
+SPDX-PackageName = "dyndnsd"
+SPDX-PackageSupplier = "Luflosi <dyndnsd@luflosi.de>"
+SPDX-PackageDownloadLocation = "https://github.com/Luflosi/dyndnsd"
+
+[[annotations]]
+path = ["**.lock", ".github/renovate.json"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024 Luflosi <dyndnsd@luflosi.de>"
+SPDX-License-Identifier = "CC0-1.0"

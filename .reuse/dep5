@@ -1,8 +1,0 @@
-Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: dyndnsd
-Upstream-Contact: Luflosi <dyndnsd@luflosi.de>
-Source: https://github.com/Luflosi/dyndnsd
-
-Files: *.lock .github/renovate.json
-Copyright: 2024 Luflosi <dyndnsd@luflosi.de>
-License: CC0-1.0
