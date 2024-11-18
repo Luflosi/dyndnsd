@@ -12,7 +12,6 @@ DeviceAllow=
 DevicePolicy=closed
 DynamicUser=true
 ExecStart=/usr/local/bin/dyndnsd --config /etc/dyndnsd/config.toml
-KillSignal=SIGINT
 LockPersonality=true
 MemoryDenyWriteExecute=true
 Nice=1
