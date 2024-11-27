@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 
 {
-  description = "Build dyndnsd";
+  description = "Simple but configurable web server for dynamic DNS updates";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";

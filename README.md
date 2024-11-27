@@ -2,7 +2,7 @@
 [SPDX-License-Identifier: AGPL-3.0-only]::
 
 # dyndnsd
-## A simple but configurable web server for dynamic DNS updates.
+## A simple but configurable web server for dynamic DNS updates
 It's a small webserver that receives DNS update requests and uses an external tool like `nsupdate` to talk to the authoritative DNS server.
 
 The dyndnsd program is written in such a way that it can interface with the `nsupdate` program but I'm using [zonegen](https://github.com/Luflosi/zonegen) which allows me to not hand complete control of the Zone file over to the DNS server so that I can still manually edit the non-dynamic parts of the Zone file.
