@@ -132,8 +132,8 @@ in
         update_program = {
           bin = lib.mkOption {
             type = lib.types.path;
-            default = "${pkgs.coreutils}/bin/false";
-            example = lib.literalExpression ''"''${pkgs.dig.dnsutils}/bin/nsupdate"'';
+            default = lib.getExe' pkgs.coreutils "false";
+            example = lib.literalExpression ''lib.getExe' pkgs.coreutils "false"'';
             description = ''
               Path to a program which will be used to forward the updated (dynamic) IP addresses to the actual DNS server.
             '';
@@ -249,8 +249,8 @@ in
         in {
           inherit RuntimeDirectory;
           EnvironmentFile = cfg.environmentFiles;
-          ExecStartPre = lib.mkIf (cfg.environmentFiles != []) [ "'${pkgs.envsubst}/bin/envsubst' -no-unset -i '${settingsFile}' -o '${runtimeConfigPath}'" ];
-          ExecStart = [ "" "${pkgs.dyndnsd}/bin/dyndnsd --config '${runtimeConfigPath}'" ];
+          ExecStartPre = lib.mkIf (cfg.environmentFiles != []) [ "'${lib.getExe pkgs.envsubst}' -no-unset -i '${settingsFile}' -o '${runtimeConfigPath}'" ];
+          ExecStart = [ "" "${lib.getExe pkgs.dyndnsd} --config '${runtimeConfigPath}'" ];
         } // lib.optionalAttrs cfg.localhost {
           IPAddressAllow = [ "localhost" ];
           IPAddressDeny = "any";
@@ -272,7 +272,7 @@ in
       systemd.services.bind.preStart = ''
         mkdir -m 0755 -p /run/named
         if ! [ -f "/run/named/ddns.key" ]; then
-          (umask 227 && ${config.services.bind.package.out}/sbin/rndc-confgen -c /run/named/ddns.key -u named -a -k ddns 2>/dev/null)
+          (umask 227 && ${lib.getExe' config.services.bind.package "rndc-confgen"} -c /run/named/ddns.key -u named -a -k ddns 2>/dev/null)
           chgrp ddns /run/named/ddns.key
           chmod 440 /run/named/ddns.key
         fi
@@ -283,7 +283,7 @@ in
       '';
 
       services.dyndnsd.settings.update_program = {
-        bin = lib.mkDefault "${pkgs.dig.dnsutils}/bin/nsupdate";
+        bin = lib.mkDefault (lib.getExe' pkgs.dig.dnsutils "nsupdate");
         args = lib.mkDefault [ "-k" "/run/named/ddns.key" ];
         initial_stdin = lib.mkDefault (if cfg.localhost then "server ::1\n" else null);
         stdin_per_zone_update = lib.mkDefault "send\n";
@@ -306,7 +306,7 @@ in
       };
 
       services.dyndnsd.settings.update_program = {
-        bin = "${pkgs.zonegen}/bin/zonegen";
+        bin = lib.getExe pkgs.zonegen;
         args = [ "--dir" "/var/lib/bind/zones/dyn/" ];
         stdin_per_zone_update = "send\n";
         final_stdin = "quit\n";
