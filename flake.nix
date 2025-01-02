@@ -96,6 +96,17 @@
             touch "$out"
           '';
 
+          dyndnsd-zizmor = pkgs.runCommand "run-zizmor" {
+            # zizmor needs this folder structure for some reason
+            src = pkgs.linkFarm "repo" [{
+              name = ".github/workflows";
+              path = ./.github/workflows;
+            }];
+          } ''
+            '${lib.getExe pkgs.zizmor}' --offline "$src"
+            touch "$out"
+          '';
+
         # NixOS tests don't run on macOS
         } // lib.optionalAttrs (!pkgs.stdenv.isDarwin) {
           dyndnsd-e2e-test = pkgs.testers.runNixOSTest (import ./nix/e2e-test.nix self);

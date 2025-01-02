@@ -21,6 +21,7 @@ jobs:
     steps:
       - uses: "actions/checkout@v4"
         with:
+          persist-credentials: false
           ref: "${{ (inputs.tag != null) && format('refs/tags/{0}', inputs.tag) || '' }}"
       - uses: "DeterminateSystems/nix-installer-action@main"
       - uses: "DeterminateSystems/flakehub-push@main"
