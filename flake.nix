@@ -78,15 +78,6 @@
             inherit src;
           };
 
-          # Run tests with cargo-nextest
-          # Consider setting `doCheck = false` on `dyndnsd` if you do not want
-          # the tests to run twice
-          dyndnsd-nextest = craneLib.cargoNextest (commonArgs // {
-            inherit cargoArtifacts;
-            partitions = 1;
-            partitionType = "count";
-          });
-
           dyndnsd-reuse = pkgs.runCommand "run-reuse" {
             src = ./.;
             nativeBuildInputs = with pkgs; [ reuse ];
