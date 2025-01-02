@@ -269,14 +269,29 @@ in
       users.groups.ddns = {};
       systemd.services.dyndnsd.serviceConfig.SupplementaryGroups = [ "ddns" ];
 
-      systemd.services.bind.preStart = ''
-        mkdir -m 0755 -p /run/named
-        if ! [ -f "/run/named/ddns.key" ]; then
-          (umask 227 && ${lib.getExe' config.services.bind.package "rndc-confgen"} -c /run/named/ddns.key -u named -a -k ddns 2>/dev/null)
-          chgrp ddns /run/named/ddns.key
-          chmod 440 /run/named/ddns.key
-        fi
-      '';
+      systemd.tmpfiles.settings."create-ddns-key"."/run/named".d = {
+        user = "named";
+        group = "named";
+      };
+
+      systemd.services.create-ddns-key = {
+        description = "Service to create a key for the ddns group to authenticate to BIND";
+        before = [ "bind.service" "dyndnsd.service" ];
+        requiredBy = [ "bind.service" "dyndnsd.service" ];
+        script = ''
+          if ! [ -f "/run/named/ddns.key" ]; then
+            ${lib.getExe' config.services.bind.package "rndc-confgen"} -c /run/named/ddns.key -u named -a -k ddns 2>/dev/null
+            chmod 440 /run/named/ddns.key
+          fi
+        '';
+        serviceConfig = {
+          Type = "oneshot";
+          StartLimitBurst = 1;
+          User = "named";
+          Group = "ddns";
+          UMask = "0227";
+        };
+      };
 
       services.bind.extraConfig = ''
         include "/run/named/ddns.key";

@@ -10,6 +10,11 @@ self:
       self.outputs.nixosModules.dyndnsd
     ];
 
+    systemd.tmpfiles.settings."bind"."/var/lib/bind/zones/example.org/".d = {
+      user = "named";
+      group = "named";
+    };
+
     systemd.services.bind.preStart = let
       zoneFile = pkgs.writeText "root.zone" ''
         $ORIGIN example.org.
@@ -30,10 +35,7 @@ self:
         test IN AAAA 8:7:6:5:4:3:2:1
       '';
     in ''
-      mkdir -p '/var/lib/bind/zones/example.org/'
-      chown -R named '/var/lib/bind/zones/example.org/'
       cp '${zoneFile}' '/var/lib/bind/zones/example.org/example.org.zone'
-      chown named '/var/lib/bind/zones/example.org/example.org.zone'
     '';
 
     services.bind = {
