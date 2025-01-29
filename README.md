@@ -77,6 +77,7 @@ If you would like to see any of the following TODO items implemented, please fil
 - Make use of the `ipv6lanprefix` sent by FRITZ!Boxes
 - Add reverse DNS records
 - Fix the problem where changing the domains in the config file does not immediately update the domains
+- Implement https://datatracker.ietf.org/doc/html/rfc2136 instead of calling nsupdate and integrate zonegen
 
 
 ## License
