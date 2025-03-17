@@ -44,6 +44,7 @@ fn build_command_string(config: &Config, user: &User, q: &QueryParameters) -> St
 		if let Some(ipv4) = q.ipv4 {
 			let ipv4 = &ipv4.to_string();
 			command.push_str(
+				#[allow(clippy::literal_string_with_formatting_args)]
 				config
 					.update_program
 					.ipv4
@@ -62,6 +63,7 @@ fn build_command_string(config: &Config, user: &User, q: &QueryParameters) -> St
 					splice_ipv6_addrs(props.ipv6prefixlen, prefix, props.ipv6suffix);
 				let ipv6 = &assembled_addr.to_string();
 				command.push_str(
+					#[allow(clippy::literal_string_with_formatting_args)]
 					config
 						.update_program
 						.ipv6
