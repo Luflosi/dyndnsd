@@ -94,7 +94,7 @@
               fileset = ./.github/workflows;
             };
           } ''
-            '${lib.getExe pkgs.zizmor}' --offline "$src"
+            '${lib.getExe pkgs.zizmor}' --no-progress --offline "$src"
             touch "$out"
           '';
 
