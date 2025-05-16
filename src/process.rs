@@ -73,7 +73,7 @@ fn build_command_string(config: &Config, user: &User, q: &QueryParameters) -> St
 						.replace("{ipv6}", ipv6)
 						.as_str(),
 				);
-			};
+			}
 		}
 		command.push_str(config.update_program.stdin_per_zone_update.as_str());
 	}
@@ -100,7 +100,7 @@ pub fn update(config: &Config, q: &QueryParameters) -> Result<impl Reply, impl R
 			"Not authorized".to_string(),
 			StatusCode::FORBIDDEN,
 		));
-	};
+	}
 
 	info!("Authentication successful");
 
@@ -130,7 +130,7 @@ pub fn update(config: &Config, q: &QueryParameters) -> Result<impl Reply, impl R
 				e.to_string(),
 				StatusCode::INTERNAL_SERVER_ERROR,
 			));
-		};
+		}
 	}
 
 	let output = match child.wait_with_output() {

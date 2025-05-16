@@ -86,7 +86,7 @@ impl Config<'_> {
 						return Err(eyre!("Prefix is longer than 128 bits: {prefixlen}"))
 							.wrap_err_with(ipv6prefixlen_parse_err_msg)
 							.wrap_err_with(config_parse_err_msg);
-					};
+					}
 				}
 				// TODO: figure out how to do this without leaking memory. I wish PasswordHash::new() took a String instead of &str
 				let raw_hash = Box::leak(Box::new(raw_user.hash));
