@@ -10,7 +10,7 @@ The dyndnsd program is written in such a way that it can interface with the `nsu
 ## Setup on NixOS
 Take a look at `nix/e2e-test.nix` for an example. You need to import the module and overlay provided by this flake.
 
-I use this service only on NixOS but it should just work on other Linux distributions as well.
+I use this service only on NixOS but it should just work™ on other Linux distributions as well.
 
 ## Manual installation and usage instructions (Non-NixOS) (probably incomplete)
 - Install a rust compiler
@@ -28,14 +28,14 @@ I use this service only on NixOS but it should just work on other Linux distribu
 
 If you want to update an IP address in your local network at home, I recommend using your router for this if possible.
 Your router knows when its IP address changes and can send an update immediately.
-This removes the need for frequent periodic updates.
+This removes the need for frequent periodic updates while also updating the IP address(es) immediately.
 
 ## List of tested routers (please add to this list)
 - FRITZ!Box routers
 - OpenWrt
 
 ## IPv6 addresses
-This daemon provides the most flexible IPv6 support of any DNS update client I know of.
+This daemon provides the most flexible IPv6 support of any DNS update server I know of.
 
 This is required if you run the update client on your router but want to update the DNS record of a device behind the router.
 
@@ -74,10 +74,13 @@ If you would like to see any of the following TODO items implemented, please fil
 - Support HTTP basic auth
 - Improve documentation
 - Add some simpler tests in Rust in addition to the NixOS test
-- Make use of the `ipv6lanprefix` sent by FRITZ!Boxes
+- Make use of the `ipv6lanprefix` sent by FRITZ!Boxes, see [this guide](https://fritz.com/service/wissensdatenbank/dok/FRITZ-Box-4060/30_Dynamic-DNS-in-FRITZ-Box-einrichten/)
 - Add reverse DNS records
 - Fix the problem where changing the domains in the config file does not immediately update the domains
 - Implement https://datatracker.ietf.org/doc/html/rfc2136 instead of calling nsupdate and integrate zonegen
+- Allow using with ddclient
+- Add instructions for different update clients
+- Add reverse DNS entries
 
 
 ## License
