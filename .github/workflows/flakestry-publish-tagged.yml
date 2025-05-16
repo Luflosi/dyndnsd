@@ -20,6 +20,6 @@ jobs:
       id-token: "write"
       contents: "read"
     steps:
-      - uses: flakestry/flakestry-publish@main
+      - uses: flakestry/flakestry-publish@fc5c0f9151687306d169606859530ba9e5ff2501
         with:
           version: "${{ inputs.tag || github.ref_name }}"
