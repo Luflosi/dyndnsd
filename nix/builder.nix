@@ -43,7 +43,10 @@ rec {
   # artifacts from above.
   dyndnsd = craneLib.buildPackage (commonArgs // {
     inherit cargoArtifacts;
-    meta.mainProgram = "dyndnsd";
+    meta = {
+      description = "Simple but configurable web server for dynamic DNS updates";
+      mainProgram = "dyndnsd";
+    };
   });
 
   dyndnsd-systemd-unit = pkgs.runCommand "dyndnsd-systemd-unit" { } ''
@@ -53,6 +56,6 @@ rec {
   dyndnsd-full = pkgs.symlinkJoin {
     name = "dyndnsd-full";
     paths = [ dyndnsd dyndnsd-systemd-unit ];
-    meta.mainProgram = dyndnsd.meta.mainProgram;
+    inherit (dyndnsd) meta;
   };
 }

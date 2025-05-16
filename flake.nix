@@ -112,8 +112,10 @@
           });
         };
 
-        apps.dyndnsd = flake-utils.lib.mkApp {
+        apps.dyndnsd = (flake-utils.lib.mkApp {
           drv = dyndnsd;
+        }) // {
+          inherit (dyndnsd) meta;
         };
         apps.default = self.apps.${system}.dyndnsd;
 
