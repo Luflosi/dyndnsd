@@ -56,6 +56,9 @@ rec {
   dyndnsd-full = pkgs.symlinkJoin {
     name = "dyndnsd-full";
     paths = [ dyndnsd dyndnsd-systemd-unit ];
-    inherit (dyndnsd) meta;
+    meta = {
+      description = dyndnsd.meta.description + " (with systemd unit file)";
+      inherit (dyndnsd.meta) mainProgram;
+    };
   };
 }
