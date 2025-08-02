@@ -34,6 +34,25 @@ let
       };
     };
   };
+  listenOpts = { lib, name, ... }: {
+    options = {
+      ip = lib.mkOption {
+        type = lib.types.str;
+        example = "::1";
+        description = ''
+          Only listen to incoming requests on a specific IP address.
+          The special address :: will listen on all IPv4 and IPv6 addresses.
+        '';
+      };
+      port = lib.mkOption {
+        type = lib.types.port;
+        example = 9841;
+        description = ''
+          The port on which to listen.
+        '';
+      };
+    };
+  };
 
   domainOpts = { lib, name, ... }: {
     options = {
@@ -109,23 +128,16 @@ in
       };
 
       settings = {
-        listen = {
-          ip = lib.mkOption {
-            type = lib.types.str;
-            default = "::1";
-            example = "::";
-            description = ''
-              Only listen to incoming requests on a specific IP address.
-              The default is to listen on IPv6 localhost.
-              The special address :: will listen on all IPv4 and IPv6 addresses.
-            '';
-          };
-          port = lib.mkOption {
-            type = lib.types.port;
-            default = 9841;
-            description = ''
-              The port on which to listen.
-            '';
+        listen = lib.mkOption {
+          type = lib.types.nullOr (lib.types.submodule listenOpts);
+          default = null;
+          description = ''
+            Listen options.
+            If you want to pass an already opened file descriptor to dyndnsd, for example for socket activation, set this to null.
+          '';
+          example = {
+            ip = "::1";
+            port = 9841;
           };
         };
 
@@ -234,10 +246,16 @@ in
     (lib.mkIf cfg.enable {
       systemd.packages = [ pkgs.dyndnsd ];
 
+      users.users.dyndnsd = {
+        isSystemUser = true;
+        group = "dyndnsd";
+      };
+      users.groups.dyndnsd = {};
+
       systemd.services.dyndnsd = {
         description = "Service that updates a dynamic DNS record";
         after = [ "network.target" ];
-        wantedBy = [ "multi-user.target" ];
+        wantedBy = lib.mkIf (cfg.settings.listen != null) [ "multi-user.target" ];
         startLimitBurst = 1;
 
         serviceConfig = let
@@ -251,9 +269,26 @@ in
           EnvironmentFile = cfg.environmentFiles;
           ExecStartPre = lib.mkIf (cfg.environmentFiles != []) [ "'${lib.getExe pkgs.envsubst}' -no-unset -i '${settingsFile}' -o '${runtimeConfigPath}'" ];
           ExecStart = [ "" "${lib.getExe pkgs.dyndnsd} --config '${runtimeConfigPath}'" ];
+        } // lib.optionalAttrs (cfg.settings.listen == null) {
+          CapabilityBoundingSet = [ "" ];
+          # TODO: try commenting these in, once zonegen is merged into dyndnsd
+          # RestrictAddressFamilies = [ "" ];
+          # PrivateNetwork = true;
         } // lib.optionalAttrs cfg.localhost {
           IPAddressAllow = [ "localhost" ];
           IPAddressDeny = "any";
+        };
+      };
+
+      systemd.sockets = lib.mkIf (cfg.settings.listen == null) {
+        dyndnsd = {
+          wantedBy = [ "sockets.target" ];
+          socketConfig = {
+            ListenStream = "%t/dyndnsd.sock";
+            SocketMode = "0660";
+            SocketUser = "dyndnsd";
+            SocketGroup = "dyndnsd";
+          };
         };
       };
 

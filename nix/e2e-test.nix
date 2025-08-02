@@ -1,9 +1,12 @@
 # SPDX-FileCopyrightText: 2024 Luflosi <dyndnsd@luflosi.de>
 # SPDX-License-Identifier: AGPL-3.0-only
 
-self:
+{
+  self,
+  socket-activation,
+}:
 { lib, pkgs, ... }: {
-  name = "dyndns";
+  name = "dyndns-" + (if socket-activation then "so" else "ip");
   # TODO: test both with and without `environmentFiles`
   nodes.machine = { config, pkgs, ... }: {
     imports = [
@@ -70,6 +73,10 @@ self:
       enable = true;
       useNsupdateProgram = true;
       settings = {
+        listen = lib.mkIf (!socket-activation) {
+          ip = "::1";
+          port = 9841;
+        };
         users = {
           alice = {
             hash = "$HASH";
@@ -93,7 +100,12 @@ self:
 
     environment.systemPackages = [ pkgs.dig.dnsutils ]; # Provide the `dig` command in the test script
   };
-  testScript = ''
+  testScript = let
+    curl-cmd = if !socket-activation then
+      "curl"
+    else
+      "sudo -u dyndnsd -g dyndnsd curl --unix-socket /run/dyndnsd.sock";
+  in ''
     def query(
         query: str,
         query_type: str,
@@ -110,13 +122,15 @@ self:
 
     start_all()
     machine.succeed("systemd-analyze security dyndnsd.service | cat >&2") # Pipe to cat, otherwise the output will be cut off at the end because systemd-analyze thinks the "terminal" is too small
+    '' + lib.optionalString (!socket-activation) ''
     machine.wait_for_unit("dyndnsd.service")
+    '' + ''
     machine.wait_for_unit("bind.service")
     query("example.org", "A", "1.2.3.4")
     query("example.org", "AAAA", "1:2:3:4:5:6:7:8")
     query("test.example.org", "A", "4.3.2.1")
     query("test.example.org", "AAAA", "8:7:6:5:4:3:2:1")
-    machine.succeed("curl --fail-with-body -v 'http://[::1]:9841/update?user=alice&pass=123456&ipv4=2.3.4.5&ipv6=2:3:4:5:6:7:8:9'")
+    machine.succeed("${curl-cmd} --fail-with-body -v 'http://[::1]:9841/update?user=alice&pass=123456&ipv4=2.3.4.5&ipv6=2:3:4:5:6:7:8:9'")
     query("example.org", "A", "2.3.4.5")
     query("example.org", "AAAA", "2:3:4:1::5")
     query("test.example.org", "A", "2.3.4.5")

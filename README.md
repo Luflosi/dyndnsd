@@ -82,6 +82,7 @@ If you would like to see any of the following TODO items implemented, please fil
 - Add instructions for different update clients
 - Add reverse DNS entries
 - Read multiple config files and merge the information (Replace env-subst for secrets)
+- Listen on multiple IP addresses, see https://stackoverflow.com/questions/70373609/how-to-listen-on-multiple-ports-with-warp
 
 
 ## License

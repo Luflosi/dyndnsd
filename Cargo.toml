@@ -14,10 +14,12 @@ argon2 = { version = "0.5", features = ["std"] }
 clap = { version = "4.5", features = ["derive"] }
 color-eyre = "0.6"
 env_logger = "0.11"
+listenfd = "1.0"
 log = "0.4"
 serde = "1.0"
 serde_derive = "1.0"
 tokio = { version = "1", features = ["full"] }
+tokio-stream = { version = "0.1", features = ["net"] }
 toml = "0.8"
 warp = "0.3"
 

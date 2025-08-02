@@ -11,7 +11,7 @@ use std::path::Path;
 
 #[derive(Debug, Deserialize)]
 struct RawConfig {
-	listen: RawListen,
+	listen: Option<RawListen>,
 	update_program: UpdateProgram,
 	users: HashMap<String, RawUser>,
 }
@@ -30,7 +30,7 @@ struct RawUser {
 
 #[derive(Clone, Debug)]
 pub struct Config<'a> {
-	pub listen: SocketAddr,
+	pub listen: Option<SocketAddr>,
 	pub update_program: UpdateProgram,
 	pub users: HashMap<String, User<'a>>,
 }
@@ -71,6 +71,9 @@ impl Config<'_> {
 		let config_parse_err_msg = || format!("Cannot parse config file `{}`", filename.display());
 		let raw_config: RawConfig =
 			toml::from_str(&contents).wrap_err_with(config_parse_err_msg)?;
+		let listen = raw_config
+			.listen
+			.map(|raw_listen| SocketAddr::from((raw_listen.ip, raw_listen.port)));
 		let users: Result<HashMap<_, _>> = raw_config
 			.users
 			.into_iter()
@@ -101,7 +104,7 @@ impl Config<'_> {
 			})
 			.collect();
 		let config = Config {
-			listen: SocketAddr::from((raw_config.listen.ip, raw_config.listen.port)),
+			listen,
 			update_program: raw_config.update_program,
 			users: users?,
 		};
