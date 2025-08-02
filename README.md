@@ -81,6 +81,7 @@ If you would like to see any of the following TODO items implemented, please fil
 - Allow using with ddclient
 - Add instructions for different update clients
 - Add reverse DNS entries
+- Read multiple config files and merge the information (Replace env-subst for secrets)
 
 
 ## License
