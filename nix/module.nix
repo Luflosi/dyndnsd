@@ -286,7 +286,6 @@ in
         '';
         serviceConfig = {
           Type = "oneshot";
-          StartLimitBurst = 1;
           User = "named";
           Group = "ddns";
           UMask = "0227";
