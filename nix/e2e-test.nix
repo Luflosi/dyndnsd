@@ -109,6 +109,7 @@ self:
         assert expected == out, f"Expected `{expected}` but got `{out}`"
 
     start_all()
+    machine.succeed("systemd-analyze security dyndnsd.service | cat >&2") # Pipe to cat, otherwise the output will be cut off at the end because systemd-analyze thinks the "terminal" is too small
     machine.wait_for_unit("dyndnsd.service")
     machine.wait_for_unit("bind.service")
     query("example.org", "A", "1.2.3.4")
