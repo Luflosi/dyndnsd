@@ -349,8 +349,6 @@ in
         SupplementaryGroups = [ "zonegen" ];
         ReadWritePaths = [ "/var/lib/bind/zones/dyn/" ];
 
-        # The tempfile-fast rust crate tries to keep the old permissions, so we need to allow this class of system calls
-        SystemCallFilter = [ "@chown" ];
         UMask = "0022"; # Allow all processes (including BIND) to read the zone files (and database)
       };
 
