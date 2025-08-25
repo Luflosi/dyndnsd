@@ -31,7 +31,7 @@ Your router knows when its IP address changes and can send an update immediately
 This removes the need for frequent periodic updates while also updating the IP address(es) immediately.
 
 ## List of tested routers (please add to this list)
-- FRITZ!Box routers
+- [FRITZ!Box routers](/doc/FRITZ%21Box.md)
 - OpenWrt
 
 ## IPv6 addresses
