@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2024 Luflosi <dyndnsd@luflosi.de>
 // SPDX-License-Identifier: AGPL-3.0-only
 
-use crate::config::{Config, User};
+use crate::config::{Config, Ipv6PrefixLen, User};
 use argon2::{password_hash::PasswordVerifier, Argon2};
 use log::{debug, error, info, trace, warn};
 use serde_derive::Deserialize;
@@ -21,10 +21,10 @@ pub struct QueryParameters {
 	ipv6lanprefix: Option<String>,
 }
 
-fn splice_ipv6_addrs(prefixlen: u8, prefix: Ipv6Addr, suffix: Ipv6Addr) -> Ipv6Addr {
+fn splice_ipv6_addrs(prefixlen: &Ipv6PrefixLen, prefix: Ipv6Addr, suffix: Ipv6Addr) -> Ipv6Addr {
 	let prefix_bits = u128::from(prefix);
 	let suffix_bits = u128::from(suffix);
-	let hostlen = 128 - prefixlen;
+	let hostlen = 128u8 - u8::from(prefixlen);
 	let suffix_mask = 2u128.pow(u32::from(hostlen)) - 1;
 	let masked_prefix = prefix_bits & !suffix_mask;
 	let masked_suffix = suffix_bits & suffix_mask;
@@ -56,11 +56,11 @@ fn build_command_string(config: &Config, user: &User, q: &QueryParameters) -> St
 			);
 		}
 		if let Some(prefix) = q.ipv6 {
-			if props.ipv6prefixlen == 0 {
+			if u8::from(&props.ipv6prefixlen) == 0 {
 				warn!("IPv6 prefix length for domain {domain} is zero, ignoring update to IPv6 address");
 			} else {
 				let assembled_addr =
-					splice_ipv6_addrs(props.ipv6prefixlen, prefix, props.ipv6suffix);
+					splice_ipv6_addrs(&props.ipv6prefixlen, prefix, props.ipv6suffix);
 				let ipv6 = &assembled_addr.to_string();
 				command.push_str(
 					#[allow(clippy::literal_string_with_formatting_args)]

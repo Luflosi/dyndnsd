@@ -10,6 +10,39 @@ use std::fs;
 use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 use std::path::Path;
 
+#[derive(Clone, Debug, Deserialize)]
+pub struct Ipv6PrefixLen(u8);
+
+#[derive(thiserror::Error, Debug)]
+pub enum Ipv6PrefixLengthError {
+	#[error("The prefix is longer than 128 bits: {prefixlen}")]
+	TooLong { prefixlen: u8 },
+}
+
+impl TryFrom<u8> for Ipv6PrefixLen {
+	type Error = Ipv6PrefixLengthError;
+
+	fn try_from(prefixlen: u8) -> std::result::Result<Self, Self::Error> {
+		if prefixlen <= 128 {
+			Ok(Self(prefixlen))
+		} else {
+			Err(Ipv6PrefixLengthError::TooLong { prefixlen })
+		}
+	}
+}
+
+impl From<Ipv6PrefixLen> for u8 {
+	fn from(prefixlen: Ipv6PrefixLen) -> Self {
+		prefixlen.0
+	}
+}
+
+impl From<&Ipv6PrefixLen> for u8 {
+	fn from(prefixlen: &Ipv6PrefixLen) -> Self {
+		prefixlen.0
+	}
+}
+
 #[derive(Debug, Deserialize)]
 struct RawListen {
 	ip: IpAddr,
@@ -22,10 +55,50 @@ impl From<RawListen> for SocketAddr {
 	}
 }
 
+#[derive(Clone, Debug, Deserialize)]
+pub struct Domain {
+	pub ttl: u32,
+	pub ipv6prefixlen: Ipv6PrefixLen,
+	pub ipv6suffix: Ipv6Addr,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct RawDomain {
+	pub ttl: u32,
+	pub ipv6prefixlen: u8,
+	pub ipv6suffix: Ipv6Addr,
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum DomainConvertError {
+	#[error("Cannot parse ipv6prefixlen for domain {domain_name}")]
+	InvalidIpv6PrefixLen {
+		domain_name: String,
+		source: Ipv6PrefixLengthError,
+	},
+}
+
+impl RawDomain {
+	fn try_into(self, domain_name: &String) -> std::result::Result<Domain, DomainConvertError> {
+		let ipv6prefixlen = self.ipv6prefixlen.try_into().map_err(|source| {
+			DomainConvertError::InvalidIpv6PrefixLen {
+				domain_name: domain_name.to_string(),
+				source,
+			}
+		})?;
+		let domain = Domain {
+			ttl: self.ttl,
+			ipv6prefixlen,
+			ipv6suffix: self.ipv6suffix,
+		};
+		Ok(domain)
+	}
+}
+
 #[derive(Debug, Deserialize)]
 struct RawUser {
 	hash: String,
-	domains: HashMap<String, Domain>,
+	domains: HashMap<String, RawDomain>,
 }
 
 #[derive(Clone, Debug)]
@@ -36,41 +109,48 @@ pub struct User<'a> {
 
 #[derive(thiserror::Error, Debug)]
 pub enum UserConvertError {
-	#[error("Cannot parse ipv6prefixlen for domain {domain_name} because the prefix is longer than 128 bits: {prefixlen}")]
-	InvalidIPv6PrefixLen { domain_name: String, prefixlen: u8 },
+	#[error("Cannot parse domain config for username {username}")]
+	DomainConvert {
+		username: String,
+		source: DomainConvertError,
+	},
 
-	#[error("Cannot parse password hash {hash}")]
+	#[error("Cannot parse password hash {hash} for username {username}")]
 	InvalidPasswordHash {
+		username: String,
 		hash: String,
 		source: argon2::password_hash::Error,
 	},
 }
 
-impl TryFrom<RawUser> for User<'_> {
-	type Error = UserConvertError;
-
-	fn try_from(raw_user: RawUser) -> std::result::Result<Self, Self::Error> {
-		let domains = &raw_user.domains;
-		for (domain, props) in domains {
-			if props.ipv6prefixlen > 128 {
-				let prefixlen = props.ipv6prefixlen;
-				return Err(UserConvertError::InvalidIPv6PrefixLen {
-					domain_name: domain.to_string(),
-					prefixlen,
-				});
-			}
-		}
+impl RawUser {
+	fn try_into(self, username: &String) -> std::result::Result<User<'static>, UserConvertError> {
+		let raw_domains = &self.domains;
+		let domains: std::result::Result<HashMap<_, _>, UserConvertError> = raw_domains
+			.iter()
+			.map(|(domain_name, raw_domain)| {
+				let domain: Domain =
+					raw_domain.clone().try_into(domain_name).map_err(|source| {
+						UserConvertError::DomainConvert {
+							username: username.clone(),
+							source,
+						}
+					})?;
+				Ok((domain_name.to_string(), domain))
+			})
+			.collect();
 		// TODO: figure out how to do this without leaking memory. I wish PasswordHash::new() took a String instead of &str
-		let raw_hash = Box::leak(Box::new(raw_user.hash));
+		let raw_hash = Box::leak(Box::new(self.hash));
 		let user = User {
 			// TODO: get rid of this piece of the code by somehow implementing deserialization for PasswordHash
 			hash: PasswordHash::new(raw_hash).map_err(|source| {
 				UserConvertError::InvalidPasswordHash {
+					username: username.to_string(),
 					hash: (*raw_hash).to_string(),
 					source,
 				}
 			})?,
-			domains: raw_user.domains,
+			domains: domains?,
 		};
 		Ok(user)
 	}
@@ -92,13 +172,6 @@ pub struct SpecialUpdateProgram {
 	pub stdin: String,
 }
 
-#[derive(Clone, Debug, Deserialize)]
-pub struct Domain {
-	pub ttl: u32,
-	pub ipv6prefixlen: u8,
-	pub ipv6suffix: Ipv6Addr,
-}
-
 #[derive(Debug, Deserialize)]
 struct RawConfig {
 	listen: Option<RawListen>,
@@ -115,11 +188,8 @@ pub struct Config<'a> {
 
 #[derive(thiserror::Error, Debug)]
 pub enum ConfigConvertError {
-	#[error("Cannot validate user `{username}`")]
-	UserConvert {
-		username: String,
-		source: UserConvertError,
-	},
+	#[error("The config is invalid")]
+	UserConvert { source: UserConvertError },
 }
 
 impl TryFrom<RawConfig> for Config<'_> {
@@ -131,13 +201,9 @@ impl TryFrom<RawConfig> for Config<'_> {
 			.users
 			.into_iter()
 			.map(|(username, raw_user)| {
-				let user: User =
-					raw_user
-						.try_into()
-						.map_err(|source| ConfigConvertError::UserConvert {
-							username: username.clone(),
-							source,
-						})?;
+				let user: User = raw_user
+					.try_into(&username)
+					.map_err(|source| ConfigConvertError::UserConvert { source })?;
 				Ok((username, user))
 			})
 			.collect();
