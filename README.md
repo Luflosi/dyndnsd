@@ -70,7 +70,6 @@ If you would like to see any of the following TODO items implemented, please fil
 - Listen on more than one IP address
 - Package in Nixpkgs
 - Test on platforms other than `x86_64-linux`
-- Use systemd socket activation for lower resource usage
 - Support HTTP basic auth
 - Improve documentation
 - Add some simpler tests in Rust in addition to the NixOS test
@@ -80,7 +79,6 @@ If you would like to see any of the following TODO items implemented, please fil
 - Implement https://datatracker.ietf.org/doc/html/rfc2136 instead of calling nsupdate and integrate zonegen
 - Allow using with ddclient
 - Add instructions for different update clients
-- Add reverse DNS entries
 - Read multiple config files and merge the information (Replace env-subst for secrets)
 - Listen on multiple IP addresses, see https://stackoverflow.com/questions/70373609/how-to-listen-on-multiple-ports-with-warp
 
