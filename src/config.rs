@@ -11,22 +11,47 @@ use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 use std::path::Path;
 
 #[derive(Clone, Debug, Deserialize)]
+#[serde(untagged)]
+pub enum RawIpv6PrefixLenOrLan {
+	Len(u8),
+	Lan(String),
+}
+
+#[derive(Clone, Debug, Deserialize)]
 pub struct Ipv6PrefixLen(u8);
 
+#[derive(Clone, Debug, Deserialize)]
+pub enum Ipv6PrefixLenOrLan {
+	Lan,
+	Len(Ipv6PrefixLen),
+}
+
 #[derive(thiserror::Error, Debug)]
-pub enum Ipv6PrefixLengthError {
+pub enum Ipv6PrefixLenError {
 	#[error("The prefix is longer than 128 bits: {prefixlen}")]
 	TooLong { prefixlen: u8 },
 }
 
+#[derive(thiserror::Error, Debug)]
+pub enum Ipv6PrefixLenOrLanError {
+	#[error("The prefix is too long")]
+	PrefixTooLong { source: Ipv6PrefixLenError },
+
+	#[error("Unexpected String {string}")]
+	UnexpectedString { string: String },
+
+	#[error("The prefix is lan")]
+	IsLan {},
+}
+
 impl TryFrom<u8> for Ipv6PrefixLen {
-	type Error = Ipv6PrefixLengthError;
+	type Error = Ipv6PrefixLenError;
 
 	fn try_from(prefixlen: u8) -> std::result::Result<Self, Self::Error> {
 		if prefixlen <= 128 {
 			Ok(Self(prefixlen))
 		} else {
-			Err(Ipv6PrefixLengthError::TooLong { prefixlen })
+			Err(Ipv6PrefixLenError::TooLong { prefixlen })
 		}
 	}
 }
@@ -40,6 +65,43 @@ impl From<Ipv6PrefixLen> for u8 {
 impl From<&Ipv6PrefixLen> for u8 {
 	fn from(prefixlen: &Ipv6PrefixLen) -> Self {
 		prefixlen.0
+	}
+}
+
+impl From<Ipv6PrefixLen> for Ipv6PrefixLenOrLan {
+	fn from(prefixlen: Ipv6PrefixLen) -> Self {
+		Self::Len(prefixlen)
+	}
+}
+
+impl TryFrom<Ipv6PrefixLenOrLan> for Ipv6PrefixLen {
+	type Error = Ipv6PrefixLenOrLanError;
+
+	fn try_from(prefixlen: Ipv6PrefixLenOrLan) -> std::result::Result<Self, Self::Error> {
+		if let Ipv6PrefixLenOrLan::Len(len) = prefixlen {
+			Ok(len)
+		} else {
+			Err(Ipv6PrefixLenOrLanError::IsLan {})
+		}
+	}
+}
+
+impl TryFrom<RawIpv6PrefixLenOrLan> for Ipv6PrefixLenOrLan {
+	type Error = Ipv6PrefixLenOrLanError;
+
+	fn try_from(prefixlen: RawIpv6PrefixLenOrLan) -> std::result::Result<Self, Self::Error> {
+		match prefixlen {
+			RawIpv6PrefixLenOrLan::Len(l) => match Ipv6PrefixLen::try_from(l) {
+				Ok(len) => Ok(Self::from(len)),
+				Err(source) => Err(Ipv6PrefixLenOrLanError::PrefixTooLong { source }),
+			},
+			RawIpv6PrefixLenOrLan::Lan(s) => match s.as_str() {
+				"lan" => Ok(Self::Lan),
+				s => Err(Ipv6PrefixLenOrLanError::UnexpectedString {
+					string: s.to_string(),
+				}),
+			},
+		}
 	}
 }
 
@@ -58,14 +120,14 @@ impl From<RawListen> for SocketAddr {
 #[derive(Clone, Debug, Deserialize)]
 pub struct Domain {
 	pub ttl: u32,
-	pub ipv6prefixlen: Ipv6PrefixLen,
+	pub ipv6prefixlen: Ipv6PrefixLenOrLan,
 	pub ipv6suffix: Ipv6Addr,
 }
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct RawDomain {
 	pub ttl: u32,
-	pub ipv6prefixlen: u8,
+	pub ipv6prefixlen: RawIpv6PrefixLenOrLan,
 	pub ipv6suffix: Ipv6Addr,
 }
 
@@ -74,7 +136,7 @@ pub enum DomainConvertError {
 	#[error("Cannot parse ipv6prefixlen for domain {domain_name}")]
 	InvalidIpv6PrefixLen {
 		domain_name: String,
-		source: Ipv6PrefixLengthError,
+		source: Ipv6PrefixLenOrLanError,
 	},
 }
 

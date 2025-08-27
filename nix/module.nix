@@ -65,7 +65,7 @@ let
         '';
       };
       ipv6prefixlen = lib.mkOption {
-        type = lib.types.ints.between 0 128;
+        type = lib.types.either (lib.types.ints.between 0 128) (lib.types.enum [ "lan" ]);
         default = 128;
         example = 56;
         description = ''
@@ -77,6 +77,7 @@ let
           The IPv6 address in the URL query parameter is spliced together with the IPv6 address from the `ipv6suffix` option
           by taking the first `ipv6prefixlen` bits from the IPv6 address from the URL query parameter with the last 128 - `ipv6prefixlen` bits from the `ipv6suffix` option.
           If you do not want to update the IPv6 address, set this to 0.
+          If your router supplies the `ipv6lanprefix` parameter in the update URL, you can set `ipv6prefixlen` to `"lan"` to automatically determine the correct prefix length (and prefix).
         '';
       };
       ipv6suffix = lib.mkOption {

@@ -36,6 +36,9 @@
 
         test IN A    4.3.2.1
         test IN AAAA 8:7:6:5:4:3:2:1
+
+        lan IN A    1.3.2.4
+        lan IN AAAA 1:9:2:8:3:7:4:6
       '';
     in ''
       cp '${zoneFile}' '/var/lib/bind/zones/example.org/example.org.zone'
@@ -56,6 +59,7 @@
             update-policy {
               grant ddns name example.org A AAAA;
               grant ddns name test.example.org A AAAA;
+              grant ddns name lan.example.org A AAAA;
             };
           '';
         };
@@ -90,6 +94,11 @@
                 ttl = 300;
                 ipv6prefixlen = 48;
                 ipv6suffix = "0:0:0:1::6";
+              };
+              "lan.example.org" = {
+                ttl = 300;
+                ipv6prefixlen = "lan";
+                ipv6suffix = "::1";
               };
             };
           };
@@ -130,10 +139,14 @@
     query("example.org", "AAAA", "1:2:3:4:5:6:7:8")
     query("test.example.org", "A", "4.3.2.1")
     query("test.example.org", "AAAA", "8:7:6:5:4:3:2:1")
-    machine.succeed("${curl-cmd} --fail-with-body -v 'http://[::1]:9841/update?user=alice&pass=123456&ipv4=2.3.4.5&ipv6=2:3:4:5:6:7:8:9'")
+    query("lan.example.org", "A", "1.3.2.4")
+    query("lan.example.org", "AAAA", "1:9:2:8:3:7:4:6")
+    machine.succeed("${curl-cmd} --fail-with-body -v 'http://[::1]:9841/update?user=alice&pass=123456&ipv4=2.3.4.5&ipv6=2:3:4:5:6:7:8:9&ipv6lanprefix=3:4:5:6::/64'")
     query("example.org", "A", "2.3.4.5")
     query("example.org", "AAAA", "2:3:4:1::5")
     query("test.example.org", "A", "2.3.4.5")
     query("test.example.org", "AAAA", "2:3:4:1::6")
+    query("lan.example.org", "A", "2.3.4.5")
+    query("lan.example.org", "AAAA", "3:4:5:6::1")
   '';
 }

@@ -43,6 +43,7 @@ In this case your internet provider probably gives you a dynamic IPv6 prefix (of
 Your router then picks some address range such that each host in your local network can pick 64 bit of the address.
 With the above example of 56 bit your router would pick the next 8 bit and each device would choose the remaining 64 bit.
 To make this work with dynamic DNS updates, edit the configuratin and change `ipv6prefixlen` to the prefix length your ISP gives you (e.g. 56).
+If you have a FRITZ!Box or other router which can supply `ipv6lanprefix`, set `ipv6prefixlen` to `lan` to determine the prefix length automatically.
 Then make sure that the host for which you want to update the DNS record has a predictable IPv6 suffix.
 For example if your IP address happens to be 2001:db8:0123:4567:8901:2345:6789:0123 right now, the last 128-56=72 bits should never change (67:8901:2345:6789:0123))
 Then add zeroes to the front of the suffix to make it a valid IPv6 address (0::67:8901:2345:6789:0123 in this example) and set it as the `ipv6suffix`.
@@ -73,7 +74,6 @@ If you would like to see any of the following TODO items implemented, please fil
 - Support HTTP basic auth
 - Improve documentation
 - Add some simpler tests in Rust in addition to the NixOS test
-- Make use of the `ipv6lanprefix` sent by FRITZ!Boxes, see [this guide](https://fritz.com/service/wissensdatenbank/dok/FRITZ-Box-4060/30_Dynamic-DNS-in-FRITZ-Box-einrichten/)
 - Add reverse DNS records
 - Fix the problem where changing the domains in the config file does not immediately update the domains
 - Implement https://datatracker.ietf.org/doc/html/rfc2136 instead of calling nsupdate and integrate zonegen

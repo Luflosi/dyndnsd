@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 mod config;
+mod ipv6lanprefix;
 mod logging;
 mod process;
 
 use crate::config::Config;
-use crate::process::{update, QueryParameters};
+use crate::process::{update, RawQueryParameters};
 use clap::Parser;
 use color_eyre::eyre::{eyre, Result, WrapErr};
 use listenfd::ListenFd;
@@ -39,8 +40,8 @@ async fn main() -> Result<()> {
 	let update = warp::get()
 		.and(warp::path("update"))
 		.and(warp::path::end())
-		.and(warp::query::<QueryParameters>())
-		.map(move |q: QueryParameters| update(&config, &q));
+		.and(warp::query::<RawQueryParameters>())
+		.map(move |raw_q: RawQueryParameters| update(&config, &raw_q));
 
 	let server = warp::serve(update);
 	let listener_count = listenfd.len();
