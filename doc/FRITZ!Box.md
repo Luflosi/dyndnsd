@@ -16,6 +16,12 @@
 - Enter your dyndnsd username in the 'Username' field
 - Enter your dyndnsd password in the 'Password' field
 - Click on 'Apply' to save the settings
+- Click on 'Heimnetz'
+- Click on 'Netzwerk' in the 'Heimnetz' menu
+- Click on the 'Netzwerkeinstellungen' tab
+- Scroll to 'DNS-Rebind-Schutz'
+- Enter all your domains and subdomains in the 'Hostnamen-Ausnahmen:' field
+- Click on 'Apply' to save the settings
 
 ## Notes
 
