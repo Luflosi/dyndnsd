@@ -13,7 +13,6 @@ use color_eyre::eyre::{eyre, Result, WrapErr};
 use listenfd::ListenFd;
 use log::info;
 use tokio::net::UnixListener;
-use tokio_stream::wrappers::UnixListenerStream;
 use warp::Filter;
 
 #[derive(Parser, Debug)]
@@ -68,8 +67,7 @@ async fn main() -> Result<()> {
 		};
 		let listener = UnixListener::from_std(std_listener)
 			.wrap_err("Cannot convert std::os::unix::net::UnixListener to UnixListener")?;
-		let incoming = UnixListenerStream::new(listener);
-		server.run_incoming(incoming).await;
+		server.incoming(listener).run().await;
 	}
 
 	Ok(())
