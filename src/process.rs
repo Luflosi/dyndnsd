@@ -3,14 +3,14 @@
 
 use crate::config::{Config, Ipv6PrefixLen, Ipv6PrefixLenOrLan, UpdateProgram, User};
 use crate::ipv6lanprefix::{Ipv6LanPrefix, Ipv6LanPrefixError};
-use argon2::{password_hash::PasswordVerifier, Argon2};
+use argon2::{Argon2, password_hash::PasswordVerifier};
 use color_eyre::eyre::Result;
 use log::{debug, error, info, trace, warn};
 use serde_derive::Deserialize;
 use std::io::Write;
 use std::net::{Ipv4Addr, Ipv6Addr};
 use std::process::{Command, Stdio};
-use warp::{http::StatusCode, Reply};
+use warp::{Reply, http::StatusCode};
 
 #[derive(Deserialize)]
 pub struct QueryParameters {
@@ -131,7 +131,9 @@ fn build_command_string(config: &Config, user: &User, q: &QueryParameters) -> St
 		match &props.ipv6prefixlen {
 			Ipv6PrefixLenOrLan::Len(prefix_length) => {
 				if u8::from(prefix_length) == 0 {
-					warn!("IPv6 prefix length for domain {domain} is zero, ignoring update to IPv6 address");
+					warn!(
+						"IPv6 prefix length for domain {domain} is zero, ignoring update to IPv6 address"
+					);
 				} else if let Some(prefix) = q.ipv6 {
 					command = build_domain_command_v6(
 						command,
@@ -165,9 +167,20 @@ fn build_command_string(config: &Config, user: &User, q: &QueryParameters) -> St
 	command
 }
 
-pub fn update(config: &Config, raw_q: &RawQueryParameters) -> Result<impl Reply, impl Reply> {
+pub fn update(
+	config: &Config,
+	raw_q: &RawQueryParameters,
+) -> Result<impl Reply + use<>, impl Reply + use<>> {
 	info!("Incoming request from user `{}`", &raw_q.user);
-	debug!("domain: {:?}, user: {:?}, pass: <redacted>, ipv4: {:?}, ipv6: {:?}, dualstack: {:?}, ipv6lanprefix: {:?}", &raw_q.domain, &raw_q.user, &raw_q.ipv4, &raw_q.ipv6, &raw_q.dualstack, &raw_q.ipv6lanprefix);
+	debug!(
+		"domain: {:?}, user: {:?}, pass: <redacted>, ipv4: {:?}, ipv6: {:?}, dualstack: {:?}, ipv6lanprefix: {:?}",
+		&raw_q.domain,
+		&raw_q.user,
+		&raw_q.ipv4,
+		&raw_q.ipv6,
+		&raw_q.dualstack,
+		&raw_q.ipv6lanprefix
+	);
 
 	let q_result: std::result::Result<QueryParameters, Ipv6LanPrefixError> = raw_q.try_into();
 	let q = match q_result {
@@ -218,14 +231,14 @@ pub fn update(config: &Config, raw_q: &RawQueryParameters) -> Result<impl Reply,
 		}
 	};
 
-	if let Some(mut stdin) = child.stdin.take() {
-		if let Err(e) = stdin.write_all(command.as_bytes()) {
-			error!("Error writing command to child process: {e}");
-			return Err(warp::reply::with_status(
-				e.to_string(),
-				StatusCode::INTERNAL_SERVER_ERROR,
-			));
-		}
+	if let Some(mut stdin) = child.stdin.take()
+		&& let Err(e) = stdin.write_all(command.as_bytes())
+	{
+		error!("Error writing command to child process: {e}");
+		return Err(warp::reply::with_status(
+			e.to_string(),
+			StatusCode::INTERNAL_SERVER_ERROR,
+		));
 	}
 
 	let output = match child.wait_with_output() {

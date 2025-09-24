@@ -7,9 +7,9 @@ mod logging;
 mod process;
 
 use crate::config::Config;
-use crate::process::{update, RawQueryParameters};
+use crate::process::{RawQueryParameters, update};
 use clap::Parser;
-use color_eyre::eyre::{eyre, Result, WrapErr};
+use color_eyre::eyre::{Result, WrapErr, eyre};
 use listenfd::ListenFd;
 use log::info;
 use tokio::net::UnixListener;
@@ -46,13 +46,17 @@ async fn main() -> Result<()> {
 	let listener_count = listenfd.len();
 	if let Some(listen) = listen {
 		if listener_count != 0 {
-			return Err(eyre!("According to the config file, we should listen on a TCP socket. But we were also passed an already opened socket as a file descriptor. Either remove the relevant section in the config file or don't let e.g. systemd pass a socket."));
+			return Err(eyre!(
+				"According to the config file, we should listen on a TCP socket. But we were also passed an already opened socket as a file descriptor. Either remove the relevant section in the config file or don't let e.g. systemd pass a socket."
+			));
 		}
 		info!("Listening on {listen}");
 		server.run(listen).await;
 	} else {
 		if listener_count == 0 {
-			return Err(eyre!("Don't know where to listen. The config file does not specify where to listen and nobody gave us an already file descriptor."));
+			return Err(eyre!(
+				"Don't know where to listen. The config file does not specify where to listen and nobody gave us an already file descriptor."
+			));
 		}
 		if listener_count > 1 {
 			return Err(eyre!(

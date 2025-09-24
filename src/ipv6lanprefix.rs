@@ -19,7 +19,9 @@ pub struct Ipv6LanPrefix {
 
 #[derive(thiserror::Error, Debug)]
 pub enum Ipv6LanPrefixError {
-	#[error("Could not parse ipv6lanprefix because it does not contain a / to separate the address from the prefix: {string}")]
+	#[error(
+		"Could not parse ipv6lanprefix because it does not contain a / to separate the address from the prefix: {string}"
+	)]
 	NoSlash { string: String },
 
 	#[error(
