@@ -15,9 +15,9 @@ jobs:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
-      - uses: DeterminateSystems/nix-installer-action@45a18a69953f27af3c2bfad0a5e01c38ef2da462
+      - uses: DeterminateSystems/nix-installer-action@c5a866b6ab867e88becbed4467b93592bce69f8a
       - uses: DeterminateSystems/flake-checker-action@3b006c65b880ac90c7894f7d59b892008787cbec
-      - uses: cachix/cachix-action@ee79db531bfb851a7cf47035057b7cca88d26449
+      - uses: cachix/cachix-action@29121a2db12c7ff8b89724a8898ca20d33bb4ea3
         with:
           name: luflosi
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
