@@ -141,10 +141,10 @@ pub enum DomainConvertError {
 }
 
 impl RawDomain {
-	fn try_into(self, domain_name: &String) -> std::result::Result<Domain, DomainConvertError> {
+	fn try_into(self, domain_name: &str) -> std::result::Result<Domain, DomainConvertError> {
 		let ipv6prefixlen = self.ipv6prefixlen.try_into().map_err(|source| {
 			DomainConvertError::InvalidIpv6PrefixLen {
-				domain_name: domain_name.to_string(),
+				domain_name: domain_name.to_owned(),
 				source,
 			}
 		})?;
@@ -186,7 +186,7 @@ pub enum UserConvertError {
 }
 
 impl RawUser {
-	fn try_into(self, username: &String) -> std::result::Result<User<'static>, UserConvertError> {
+	fn try_into(self, username: &str) -> std::result::Result<User<'static>, UserConvertError> {
 		let raw_domains = &self.domains;
 		let domains: std::result::Result<HashMap<_, _>, UserConvertError> = raw_domains
 			.iter()
@@ -194,11 +194,11 @@ impl RawUser {
 				let domain: Domain =
 					raw_domain.clone().try_into(domain_name).map_err(|source| {
 						UserConvertError::DomainConvert {
-							username: username.clone(),
+							username: username.to_owned(),
 							source,
 						}
 					})?;
-				Ok((domain_name.to_string(), domain))
+				Ok((domain_name.clone(), domain))
 			})
 			.collect();
 		// TODO: figure out how to do this without leaking memory. I wish PasswordHash::new() took a String instead of &str
@@ -207,8 +207,8 @@ impl RawUser {
 			// TODO: get rid of this piece of the code by somehow implementing deserialization for PasswordHash
 			hash: PasswordHash::new(raw_hash).map_err(|source| {
 				UserConvertError::InvalidPasswordHash {
-					username: username.to_string(),
-					hash: (*raw_hash).to_string(),
+					username: username.to_owned(),
+					hash: (*raw_hash).clone(),
 					source,
 				}
 			})?,
