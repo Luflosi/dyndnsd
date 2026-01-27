@@ -3,7 +3,6 @@
 
 use crate::config::{Ipv6PrefixLen, Ipv6PrefixLenError};
 use color_eyre::eyre::Result;
-use log::error;
 use serde_derive::Deserialize;
 use std::net::{AddrParseError, Ipv6Addr};
 use std::num::ParseIntError;
