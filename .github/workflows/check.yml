@@ -15,8 +15,8 @@ jobs:
       - uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
         with:
           persist-credentials: false
-      - uses: DeterminateSystems/nix-installer-action@a4f499a84c7bd15903c67fa79a1d98dd9b6d8c84
-      - uses: DeterminateSystems/flake-checker-action@fbb148b08281e59300d5a788514325fe0b95f54a
+      - uses: DeterminateSystems/nix-installer-action@86cbc893b3c44423bb3b27da33c306deba1e1ef4
+      - uses: DeterminateSystems/flake-checker-action@cdd50b72fdf4dd55734c9fa47b2b98bd18e4a931
       - uses: cachix/cachix-action@3ba601ff5bbb07c7220846facfa2cd81eeee15a1
         with:
           name: luflosi
