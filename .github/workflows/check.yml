@@ -17,7 +17,7 @@ jobs:
           persist-credentials: false
       - uses: DeterminateSystems/nix-installer-action@d96bc962e61b3049ce8128d03d57a1144fa96539
       - uses: DeterminateSystems/flake-checker-action@c12af2160982bfd63f983db063e92c66836b1c73
-      - uses: cachix/cachix-action@e7c5c1add25228c774d40ae0adbd520ea7c919c0
+      - uses: cachix/cachix-action@2b33705a8232e51ac94414b3b8c203d0a5e42ca3
         with:
           name: luflosi
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
