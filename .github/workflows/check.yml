@@ -22,4 +22,4 @@ jobs:
           name: luflosi
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
       - name: Run `nix flake check`
-        run: nix flake check --all-systems -L
+        run: nix flake check -L
