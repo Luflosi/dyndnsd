@@ -23,8 +23,8 @@ jobs:
         with:
           persist-credentials: false
           ref: "${{ (inputs.tag != null) && format('refs/tags/{0}', inputs.tag) || '' }}"
-      - uses: "DeterminateSystems/nix-installer-action@d96bc962e61b3049ce8128d03d57a1144fa96539"
-      - uses: "DeterminateSystems/flakehub-push@c7592ea6430aad84ef0a8a3c13ced98691a1a33c"
+      - uses: "DeterminateSystems/nix-installer-action@9a59e15a74545c99a626ba594edcd0d02189e670"
+      - uses: "DeterminateSystems/flakehub-push@b5c663d5f8683051330342fe9a1af870825b0776"
         with:
           visibility: "public"
           name: "Luflosi/dyndnsd"
