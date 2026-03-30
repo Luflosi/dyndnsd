@@ -188,7 +188,7 @@ pub fn update(
 		Err(e) => {
 			warn!("Error parsing QueryParameters: {e}");
 			return Err(warp::reply::with_status(
-				"Invalid query parameters".to_string(),
+				"Invalid query parameters\n".to_string(),
 				StatusCode::BAD_REQUEST,
 			));
 		}
@@ -197,7 +197,7 @@ pub fn update(
 	let Some(user) = config.users.get(&q.user) else {
 		warn!("User {} does not exist.", q.user);
 		return Err(warp::reply::with_status(
-			"Not authorized".to_string(),
+			"Not authorized\n".to_string(),
 			StatusCode::FORBIDDEN,
 		));
 	};
@@ -205,7 +205,7 @@ pub fn update(
 	if let Err(e) = Argon2::default().verify_password(q.pass.as_bytes(), &user.hash) {
 		warn!("Error verifying password: {e}");
 		return Err(warp::reply::with_status(
-			"Not authorized".to_string(),
+			"Not authorized\n".to_string(),
 			StatusCode::FORBIDDEN,
 		));
 	}
