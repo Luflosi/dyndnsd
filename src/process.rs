@@ -194,20 +194,19 @@ pub fn update(
 		}
 	};
 
+	let unauthorized = Err(warp::reply::with_status(
+		"Not authorized\n".to_string(),
+		StatusCode::FORBIDDEN,
+	));
+
 	let Some(user) = config.users.get(&q.user) else {
 		warn!("User {} does not exist.", q.user);
-		return Err(warp::reply::with_status(
-			"Not authorized\n".to_string(),
-			StatusCode::FORBIDDEN,
-		));
+		return unauthorized;
 	};
 
 	if let Err(e) = Argon2::default().verify_password(q.pass.as_bytes(), &user.hash) {
 		warn!("Error verifying password: {e}");
-		return Err(warp::reply::with_status(
-			"Not authorized\n".to_string(),
-			StatusCode::FORBIDDEN,
-		));
+		return unauthorized;
 	}
 
 	info!("Authentication successful");
