@@ -15,7 +15,9 @@
       inputs.rust-analyzer-src.follows = "";
     };
 
+    systems.url = "github:nix-systems/triplet";
     flake-utils.url = "github:numtide/flake-utils";
+    flake-utils.inputs.systems.follows = "systems";
 
     advisory-db = {
       url = "github:rustsec/advisory-db";
