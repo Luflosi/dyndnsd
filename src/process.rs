@@ -171,15 +171,10 @@ pub fn update(
 	config: &Config,
 	raw_q: &RawQueryParameters,
 ) -> Result<impl Reply + use<>, impl Reply + use<>> {
-	info!("Incoming request from user `{}`", &raw_q.user);
+	info!("Incoming request from user `{}`", raw_q.user);
 	debug!(
 		"domain: {:?}, user: {:?}, pass: <redacted>, ipv4: {:?}, ipv6: {:?}, dualstack: {:?}, ipv6lanprefix: {:?}",
-		&raw_q.domain,
-		&raw_q.user,
-		&raw_q.ipv4,
-		&raw_q.ipv6,
-		&raw_q.dualstack,
-		&raw_q.ipv6lanprefix
+		raw_q.domain, raw_q.user, raw_q.ipv4, raw_q.ipv6, raw_q.dualstack, raw_q.ipv6lanprefix
 	);
 
 	let q_result: std::result::Result<QueryParameters, Ipv6LanPrefixError> = raw_q.try_into();
