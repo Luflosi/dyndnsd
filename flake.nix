@@ -110,7 +110,7 @@
           '';
 
         # NixOS tests don't run on macOS
-        } // lib.optionalAttrs (!pkgs.stdenv.isDarwin) {
+        } // lib.optionalAttrs (!pkgs.stdenv.hostPlatform.isDarwin) {
           dyndnsd-e2e-test-socket-activation = pkgs.testers.runNixOSTest (import ./nix/e2e-test.nix { inherit self; socket-activation = true; });
           dyndnsd-e2e-test-ip-listen = pkgs.testers.runNixOSTest (import ./nix/e2e-test.nix { inherit self; socket-activation = false; });
         };
@@ -118,7 +118,7 @@
         packages = {
           dyndnsd = dyndnsd-full;
           default = self.packages.${system}.dyndnsd;
-        } // lib.optionalAttrs (!pkgs.stdenv.isDarwin) {
+        } // lib.optionalAttrs (!pkgs.stdenv.hostPlatform.isDarwin) {
           dyndnsd-llvm-coverage = craneLibLLvmTools.cargoLlvmCov (commonArgs // {
             inherit cargoArtifacts;
           });
