@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2024 Luflosi <dyndnsd@luflosi.de>
 // SPDX-License-Identifier: AGPL-3.0-only
 
-use argon2::password_hash::PasswordHash;
+use argon2::password_hash::phc::PasswordHash;
 use color_eyre::eyre::{Result, WrapErr};
 use log::info;
 use serde_derive::Deserialize;
@@ -164,8 +164,8 @@ struct RawUser {
 }
 
 #[derive(Clone, Debug)]
-pub struct User<'a> {
-	pub hash: PasswordHash<'a>,
+pub struct User {
+	pub hash: PasswordHash,
 	pub domains: HashMap<String, Domain>,
 }
 
@@ -181,12 +181,12 @@ pub enum UserConvertError {
 	InvalidPasswordHash {
 		username: String,
 		hash: String,
-		source: argon2::password_hash::Error,
+		source: argon2::password_hash::phc::Error,
 	},
 }
 
 impl RawUser {
-	fn try_into(self, username: &str) -> std::result::Result<User<'static>, UserConvertError> {
+	fn try_into(self, username: &str) -> std::result::Result<User, UserConvertError> {
 		let raw_domains = &self.domains;
 		let domains: std::result::Result<HashMap<_, _>, UserConvertError> = raw_domains
 			.iter()
@@ -201,14 +201,12 @@ impl RawUser {
 				Ok((domain_name.clone(), domain))
 			})
 			.collect();
-		// TODO: figure out how to do this without leaking memory. I wish PasswordHash::new() took a String instead of &str
-		let raw_hash = Box::leak(Box::new(self.hash));
 		let user = User {
 			// TODO: get rid of this piece of the code by somehow implementing deserialization for PasswordHash
-			hash: PasswordHash::new(raw_hash).map_err(|source| {
+			hash: PasswordHash::new(&self.hash).map_err(|source| {
 				UserConvertError::InvalidPasswordHash {
 					username: username.to_owned(),
-					hash: (*raw_hash).clone(),
+					hash: self.hash,
 					source,
 				}
 			})?,
@@ -242,10 +240,10 @@ struct RawConfig {
 }
 
 #[derive(Clone, Debug)]
-pub struct Config<'a> {
+pub struct Config {
 	pub listen: Option<SocketAddr>,
 	pub update_program: UpdateProgram,
-	pub users: HashMap<String, User<'a>>,
+	pub users: HashMap<String, User>,
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -254,7 +252,7 @@ pub enum ConfigConvertError {
 	UserConvert { source: UserConvertError },
 }
 
-impl TryFrom<RawConfig> for Config<'_> {
+impl TryFrom<RawConfig> for Config {
 	type Error = ConfigConvertError;
 
 	fn try_from(raw_config: RawConfig) -> std::result::Result<Self, Self::Error> {
@@ -269,7 +267,7 @@ impl TryFrom<RawConfig> for Config<'_> {
 				Ok((username, user))
 			})
 			.collect();
-		let config = Config {
+		let config = Self {
 			listen,
 			update_program: raw_config.update_program,
 			users: users?,
@@ -279,12 +277,12 @@ impl TryFrom<RawConfig> for Config<'_> {
 	}
 }
 
-impl Config<'_> {
-	pub fn read(filename: &Path) -> Result<Config<'static>> {
+impl Config {
+	pub fn read(filename: &Path) -> Result<Self> {
 		info!("Reading config file {}", filename.display());
 		let contents = fs::read_to_string(filename)
 			.wrap_err_with(|| format!("Cannot read config file `{}`", filename.display()))?;
-		let config: Config<'_> = Config::parse(&contents)
+		let config: Self = Self::parse(&contents)
 			.wrap_err_with(|| format!("Cannot parse config file `{}`", filename.display()))?;
 		Ok(config)
 	}

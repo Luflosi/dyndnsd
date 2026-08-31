@@ -10,7 +10,7 @@ license = "AGPL-3.0-only"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-argon2 = { version = "0.5", features = ["std"] }
+argon2 = { version = "0.6" }
 clap = { version = "4.5", features = ["derive"] }
 color-eyre = "0.6"
 env_logger = "0.11"
