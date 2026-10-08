@@ -5,7 +5,31 @@
   self,
   socket-activation,
 }:
-{ lib, pkgs, ... }: {
+{ lib, pkgs, ... }:
+let
+  zoneFile = pkgs.writeText "root.zone" ''
+    $ORIGIN example.org.
+    $TTL 3600
+    @ IN SOA ns.example.org. admin.example.org. ( 1 3h 1h 1w 1d )
+    @ IN NS ns.example.org.
+
+    ns IN A    127.0.0.1
+    ns IN AAAA ::1
+
+    1.0.0.127.in-addr.arpa IN PTR ns.example.org.
+    1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa IN PTR ns.example.org.
+
+    @ IN A    1.2.3.4
+    @ IN AAAA 1:2:3:4:5:6:7:8
+
+    test IN A    4.3.2.1
+    test IN AAAA 8:7:6:5:4:3:2:1
+
+    lan IN A    1.3.2.4
+    lan IN AAAA 1:9:2:8:3:7:4:6
+  '';
+in
+{
   name = "dyndns-" + (if socket-activation then "so" else "ip");
   # TODO: test both with and without `environmentFiles`
   nodes.machine = { config, pkgs, ... }: {
@@ -18,29 +42,7 @@
       group = "named";
     };
 
-    systemd.services.bind.preStart = let
-      zoneFile = pkgs.writeText "root.zone" ''
-        $ORIGIN example.org.
-        $TTL 3600
-        @ IN SOA ns.example.org. admin.example.org. ( 1 3h 1h 1w 1d )
-        @ IN NS ns.example.org.
-
-        ns IN A    127.0.0.1
-        ns IN AAAA ::1
-
-        1.0.0.127.in-addr.arpa IN PTR ns.example.org.
-        1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa IN PTR ns.example.org.
-
-        @ IN A    1.2.3.4
-        @ IN AAAA 1:2:3:4:5:6:7:8
-
-        test IN A    4.3.2.1
-        test IN AAAA 8:7:6:5:4:3:2:1
-
-        lan IN A    1.3.2.4
-        lan IN AAAA 1:9:2:8:3:7:4:6
-      '';
-    in ''
+    systemd.services.bind.preStart = ''
       cp '${zoneFile}' '/var/lib/bind/zones/example.org/example.org.zone'
     '';
 
@@ -48,12 +50,15 @@
       enable = true;
       forward = "only";
       forwarders = [];
-      # We refer to the file /var/lib/bind/zones/example.org/example.org.zone, which
-      # cannot be accessed from within the Nix sandbox. This causes the
-      # program, which checks the configuration, to think that the file
-      # does not exist, leading to an error.
-      # See https://github.com/NixOS/nixpkgs/pull/501959
-      checkConfig = false;
+      # The check is done in the Nix sandbox,
+      # where paths outside of the sandbox are not accessible.
+      # To avoid the check failing because it can't find some files,
+      # patch the configuration file.
+      preCheckConfig = ''
+        substituteInPlace "$target" \
+          --replace-fail 'include "/run/named/ddns.key";' "" \
+          --replace-fail '/var/lib/bind/zones/example.org/example.org.zone' '${zoneFile}'
+      '';
       extraOptions = ''
         empty-zones-enable no;
       '';
