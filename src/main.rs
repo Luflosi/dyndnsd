@@ -55,7 +55,7 @@ async fn main() -> Result<()> {
 	} else {
 		if listener_count == 0 {
 			return Err(eyre!(
-				"Don't know where to listen. The config file does not specify where to listen and nobody gave us an already file descriptor."
+				"Don't know where to listen. The config file does not specify where to listen and nobody gave us an already opened file descriptor."
 			));
 		}
 		if listener_count > 1 {
